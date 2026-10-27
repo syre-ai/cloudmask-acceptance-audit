@@ -60,3 +60,13 @@ def pick_threshold(c: dict[str, np.ndarray], target: str, limit: float) -> int:
         ok = np.where(c["discard_rate"] <= limit)[0]
         return int(ok.max()) if len(ok) else 0
     raise ValueError(target)
+
+
+def native_curve(h: np.ndarray) -> dict[str, np.ndarray]:
+    """``curve`` for histograms whose index 0 holds abstentions (scores shifted by +1). Drops the
+    shifted threshold 0, which would accept abstentions, so index t of every output array is the
+    native threshold t, and abstentions are rejected at every threshold."""
+    c = curve(h)
+    out = {k: v[1:] for k, v in c.items()}
+    out["threshold"] = np.arange(len(out["leak_rate"]))
+    return out

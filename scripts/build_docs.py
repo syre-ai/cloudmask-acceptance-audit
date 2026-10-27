@@ -204,10 +204,13 @@ nobody has measured on the buyer's own terms.
 - **Training-overlap screen:** OmniCloudMask's published training set includes CloudSEN12
   scribble and 2k patches from *all* splits, so the evaluation scenes were checked against its
   training records ({N['train_rows']} rows, pinned revision): {N['train_id_hits']} shared scene
-  ids (including {N['train_cs12_heldout_rows']} test/validation-tagged training rows),
-  {N['train_acq_hits']} shared acquisitions, and {N['train_near_images']} evaluation images whose
-  footprint may overlap a custom training scene (conservative disc around its named centre)
-  were removed. Kappaset names only its ~110 km tile; removing the {N['images'] - N['kappa_images']}
+  ids (including {N['train_cs12_heldout_rows']} test/validation-tagged training rows) and no
+  spatial overlap with any CloudSEN12 training patch. {N['test_shared_acq']} test acquisitions
+  (tile and date) also supplied other, non-overlapping CloudSEN12 patches to training
+  ({N['test_shared_acq_rows']} training rows); same-date imagery nearby is a residual dependence.
+  No acquisition is shared with the non-CloudSEN12 training sources ({N['train_acq_hits']}
+  matches), and {N['train_near_images']} evaluation images whose footprint may overlap a custom
+  training scene (conservative disc around its named centre) were removed. Kappaset names only its ~110 km tile; removing the {N['images'] - N['kappa_images']}
   test images on those tiles gives leak {N['kappa_leak']} (headline {N['leak_rate']}). This is a
   screen with stated limits, not proof that no overlap remains.
 - **Baselines** (as shipped with CloudSEN12+): Sentinel-2 QA60, Sen2Cor SCL, s2cloudless
@@ -363,7 +366,8 @@ An audit pipeline that answers the buyer's question for
 - metrics phrased as the decision: **leak** (cloud in the pixels you accept) and **discard**
   (clear ground you throw away), plus a scene-filter test;
 - a screen of the model's own published training records against the test scenes, removing
-  anything that might overlap;
+  scenes flagged as possibly overlapping (one training source can only be screened at
+  ~110 km and is covered by a sensitivity check instead);
 - side-by-side comparison with the masks that ship with Sentinel-2 products;
 - failure analysis on real scenes, a simulated stress test, and settings chosen on one data
   split and checked on another.
@@ -463,8 +467,9 @@ was used only to choose operating points.</p>
 <p><b>Independence from training data.</b> The model's published training set includes
 CloudSEN12 material from every split, so its {N['train_rows']} training records were checked
 directly against the test scenes: no shared scene ids (including {N['train_cs12_heldout_rows']}
-test/validation-tagged training records), no shared acquisitions; {N['train_near_images']} scenes
-that may overlap a custom training scene were removed. Removing every scene on a Kappaset training
+test/validation-tagged training records) and no spatial overlap with CloudSEN12 training patches,
+though {N['test_shared_acq']} test acquisitions also supplied other, non-overlapping patches to
+training; {N['train_near_images']} scenes that may overlap a custom training scene were removed. Removing every scene on a Kappaset training
 tile gives leak {N['kappa_leak']} (headline {N['leak_rate']}). This screen has limits; it does not
 prove that no overlap remains.</p>
 <p><b>Comparators.</b> Sentinel-2 QA60 and Sen2Cor SCL (shipped with the products), s2cloudless

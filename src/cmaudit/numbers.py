@@ -112,6 +112,8 @@ def load() -> dict:
     N["train_cs12_heldout_rows"] = f"{tags.get('test', 0) + tags.get('validation', 0):,}"
     N["train_id_hits"] = len(scr["cloudsen12_ids_matching_eval_images"])
     N["train_acq_hits"] = len(scr["non_cloudsen12_same_tile_and_date_as_eval"])
+    N["test_shared_acq"] = scr["test_acquisitions_shared_with_cloudsen12_training_rows"]
+    N["test_shared_acq_rows"] = scr["test_cloudsen12_training_rows_sharing_an_acquisition"]
     N["train_near_images"] = len(scr["eval_images_possibly_overlapping_ocm_custom_scene"])
 
     if (R / "mitigation_buffer.csv").exists():

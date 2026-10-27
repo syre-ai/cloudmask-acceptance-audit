@@ -31,3 +31,36 @@ def test_pick_threshold():
     assert pick_threshold(c, "leak", 0.1) == 2
     assert pick_threshold(c, "discard", 0.02) == 1
     assert pick_threshold(c, "leak", 0.01) == 4  # unreachable -> reject everything
+
+
+def test_abstentions_never_accepted():
+    from cmaudit.sweep import native_curve
+
+    label = np.array([0, 0, 1, 0])
+    shifted = np.array([1, 3, 2, 0])  # native scores 0, 2, 1 and one abstention (clear pixel)
+    h = score_hist(label, shifted, np.ones(4, bool), 4)
+    c = native_curve(h)
+    # native threshold 0 accepts every decided pixel but not the abstention
+    assert np.isclose(c["discard_rate"][0], 1 / 3) and np.isclose(c["leak_rate"][0], 1 / 3)
+    assert np.isclose(c["discard_rate"][3], 1.0)  # nothing accepted
+
+
+def test_executable_rules_match_scored_predicate():
+    import sys
+
+    sys.path.insert(0, "scripts")
+    from sweep import native_rule
+
+    # OCM: stored q = rint(float32(P) * 255); scored q >= t. The rule names that predicate.
+    thr, rule = native_rule("OmniCloudMask v4 | l1c", 218)
+    assert "rint(255 x P(clear)) >= 218" in rule and abs(thr - 217.5 / 255) < 1e-12
+    for p in (0.8520, 0.8528, 0.8531, 0.8540):  # away from the exact tie
+        assert (np.rint(np.float32(p) * 255) >= 218) == (p >= 217.5 / 255)
+    # Cloud Score+: bin = v // 10, scored bin >= t  <=>  v >= 10 t  <=>  score >= t / 1000
+    thr, rule = native_rule("Cloud Score+ cs | product", 805)
+    assert thr == 0.805 and "stored value >= 8050" in rule
+    for v in (8049, 8050, 8059):
+        assert (v // 10 >= 805) == (v >= 8050)
+    # s2cloudless: clear score 100 - v >= t  <=>  v <= 100 - t
+    thr, rule = native_rule("s2cloudless raw probability | product", 70)
+    assert "<= 30%" in rule

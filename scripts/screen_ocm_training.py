@@ -121,6 +121,18 @@ def main() -> None:
     kappa_tiles = {td[0] for td in other.loc[other["subset"] == "Kappaset", "tile_date"]}
     ev_tiles = ev["s2_id"].map(lambda x: x.split("_")[5][1:])
 
+    # Same acquisition (tile + sensing date) between evaluation images and CloudSEN12 training
+    # patches. The footprint screen already shows these patches do not overlap the evaluation
+    # patches in space; this counts shared acquisitions so the wording can be exact.
+    cs_td = cs["cs12_id"].str.extract(r"__(\d{8})T\d{6}_\d{8}T\d{6}_T(\w{5})")
+    cs_pairs = set(zip(cs_td[1], cs_td[0]))
+    raw = pd.read_parquet("data/manifest.parquet")  # not manifest(): it merges previous flags
+    eval_screened = raw[(raw["tortilla:data_split"] == "test") & (raw["tier"] == "clean")
+                        & ~raw["tortilla:id"].isin(near)]
+    ev_scr_td = {(r.split("_")[5][1:], r.split("_")[2][:8]) for r in eval_screened["s2_id"]}
+    shared = ev_scr_td & cs_pairs
+    cs_shared_rows = int(sum((t, d) in shared for d, t in zip(cs_td[0], cs_td[1])))
+
     report = {
         "training_rows": len(meta),
         "rows_by_subset": meta["subset"].value_counts().to_dict(),
@@ -128,6 +140,8 @@ def main() -> None:
         "cloudsen12_split_tags": split_tags.value_counts(dropna=False).to_dict(),
         "cloudsen12_ids_matching_eval_images": sorted(hits["cs12_id"].unique().tolist()),
         "cloudsen12_matching_rows_by_subset": hits["subset"].value_counts().to_dict(),
+        "test_cloudsen12_training_rows_sharing_an_acquisition": cs_shared_rows,
+        "test_acquisitions_shared_with_cloudsen12_training_rows": len(shared),
         "non_cloudsen12_rows": len(other),
         "non_cloudsen12_rows_with_tile_and_date": int(parsed.sum()),
         "non_cloudsen12_same_tile_and_date_as_eval": sorted(

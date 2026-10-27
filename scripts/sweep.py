@@ -17,11 +17,14 @@ from tqdm import tqdm
 
 from cmaudit.evaluate import PRED_DIR
 from cmaudit.samples import load, manifest, support
-from cmaudit.sweep import curve, pick_threshold, score_hist
+from cmaudit.sweep import native_curve as curve
+from cmaudit.sweep import pick_threshold, score_hist
 
 OUT = Path("data/results")
 
 # method key -> number of integer clear-score bins (see clear_scores)
+# method key -> number of native integer clear-score levels (see clear_scores). Histograms
+# carry one extra leading bin (index 0) for abstentions, which no threshold ever accepts.
 METHODS = {
     "OmniCloudMask v4 | l1c": 256,
     "OmniCloudMask v4 | l2a": 256,
@@ -29,43 +32,47 @@ METHODS = {
     "Cloud Score+ cs | product": 1001,
     "Cloud Score+ cs_cdf | product": 1001,
 }
+CACHE_VERSION = 2  # bump when scoring changes so stale histogram caches are not reused
 # Native scale of the clear score, for reporting thresholds in the product's own units.
 TO_NATIVE = {256: 1 / 255, 101: 1 / 100, 1001: 1 / 1000}
 
 
 def native_rule(method: str, t: int) -> tuple[float, str]:
-    """The executable acceptance rule, in the product's own units, that is exactly equivalent to
-    "integer clear score >= t" on the stored data (no rounding gap between evaluated and
-    documented thresholds)."""
+    """The executable acceptance rule for native threshold ``t``, stated so that it is exactly the
+    predicate that was scored (including quantization and tie handling)."""
     if method.startswith("OmniCloudMask"):
-        thr = (t - 0.5) / 255  # stored score = rint(255 * P(clear))
-        return thr, f"accept if P(clear) >= {thr:.4f}"
+        # stored score q = numpy.rint(float32(P) * 255) (round half to even); scored: q >= t
+        thr = (t - 0.5) / 255
+        return thr, (f"accept if rint(255 x P(clear)) >= {t} in float32, i.e. P(clear) >= about "
+                     f"{thr:.5f}")
     if method.startswith("s2cloudless"):
-        p = (100 - t) / 100  # clear score = 100 - integer cloud probability (percent)
-        return p, f"accept if raw cloud probability <= {p:.2f} (no averaging/dilation)"
-    thr = (10 * t - 5) / 10000  # bin = rint(cs * 10000 / 10)
-    return thr, f"accept if score >= {thr:.4f}"
+        # stored integer cloud probability v (percent); clear score 100 - v >= t
+        return (100 - t) / 100, (f"accept if the stored raw cloud probability is <= {100 - t}% "
+                                 f"(no averaging/dilation)")
+    # Cloud Score+ stored as integer v = score x 10000; bin = v // 10; scored: bin >= t
+    return t / 1000, f"accept if score >= {t / 1000:.3f} (stored value >= {10 * t})"
 OPERATING_POINTS = [("leak", 0.02), ("leak", 0.05), ("discard", 0.02), ("discard", 0.05)]
 N_BOOT = 1000
 
 
 def clear_scores(tid: str) -> dict[str, np.ndarray]:
+    """Integer clear scores shifted by +1, so histogram index 0 is the abstention bin."""
     ex = load("extra", tid)
     out = {}
     for level in ("l1c", "l2a"):
         with np.load(PRED_DIR / level / f"{tid}.npz") as z:
-            out[f"OmniCloudMask v4 | {level}"] = z["probs"][0].astype(np.int64)
-    out["s2cloudless raw probability | product"] = 100 - ex["cloudmask_s2cloudless"].astype(np.int64)
+            out[f"OmniCloudMask v4 | {level}"] = z["probs"][0].astype(np.int64) + 1
+    out["s2cloudless raw probability | product"] = 101 - ex["cloudmask_s2cloudless"].astype(np.int64)
     for k, layer in (("cs", "cloudmask_cloudscore_cs_v1"), ("cs_cdf", "cloudmask_cloudscore_cs_cdf_v1")):
         v = ex[layer].astype(np.int64)
-        # out-of-range values are abstentions: bin 0, i.e. rejected at every threshold t >= 1
-        # (the operational policy used everywhere else)
-        out[f"Cloud Score+ {k} | product"] = np.where(v <= 10000, np.rint(v / 10).astype(np.int64), 0)
+        # floor binning makes "bin >= t" exactly "score >= t/1000"; out-of-range values are
+        # abstentions and go to the reserved bin 0 (never accepted)
+        out[f"Cloud Score+ {k} | product"] = np.where(v <= 10000, v // 10 + 1, 0)
     return out
 
 
 def build_hists(split: str) -> tuple[dict[str, np.ndarray], np.ndarray]:
-    path = OUT / f"hists_{split}.npz"
+    path = OUT / f"hists_{split}_v{CACHE_VERSION}.npz"
     if path.exists():
         z = np.load(path, allow_pickle=False)
         return {k: z[k] for k in METHODS}, z["roi"]
@@ -76,7 +83,7 @@ def build_hists(split: str) -> tuple[dict[str, np.ndarray], np.ndarray]:
         valid = support(tid)  # common support, as in the headline scoring
         scores = clear_scores(tid)
         for k, nb in METHODS.items():
-            hists[k].append(score_hist(lv["label"], scores[k], valid, nb))
+            hists[k].append(score_hist(lv["label"], scores[k], valid, nb + 1))
     hists = {k: np.stack(v) for k, v in hists.items()}
     roi = man["roi_id"].to_numpy().astype(str)
     OUT.mkdir(parents=True, exist_ok=True)

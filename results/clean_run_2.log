@@ -1,0 +1,128 @@
+partial regeneration of b115565707d4e762ae7bbbad6cd288eeab211f26 started 2026-10-27T01:23:43-05:00
+uv run pytest -q
+.................................                                        [100%]
+=============================== warnings summary ===============================
+tests/test_download.py::test_parse_and_decode_level_sample
+  <clone>/.venv/lib/python3.12/site-packages/rasterio/io.py:144: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+    rd = writer(
+
+tests/test_download.py::test_parse_and_decode_level_sample
+  <clone>/.venv/lib/python3.12/site-packages/rasterio/io.py:141: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+    rd = DatasetReader(mempath, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+33 passed, 2 warnings in 0.82s
+uv run python scripts/screen_ocm_training.py
+<clone>/scripts/screen_ocm_training.py:118: DeprecationWarning: The 'shapely.ops.transform()' function is deprecated. Use 'shapely.transform()' or 'shapely.transform_coordseq()' instead. See https://shapely.readthedocs.io/en/latest/manual.html#shapely.ops.transform for more details.
+  discs.append(shp_transform(back, Point(0, 0).buffer(radius, 64)))
+subset
+CloudSEN12 high super res tiles       33960
+CloudSEN12 scribble                   20000
+CloudSEN12 high                       16980
+Kappaset                               9250
+CloudSEN12 high super res raw          8490
+CloudSEN12 high planetary computer     8403
+CloudSEN12 2k                          1694
+OCM hard negative                       920
+OCM scribble                            831
+{
+ "training_rows": 100528,
+ "rows_by_subset": {
+  "CloudSEN12 high super res tiles": 33960,
+  "CloudSEN12 scribble": 20000,
+  "CloudSEN12 high": 16980,
+  "Kappaset": 9250,
+  "CloudSEN12 high super res raw": 8490,
+  "CloudSEN12 high planetary computer": 8403,
+  "CloudSEN12 2k": 1694,
+  "OCM hard negative": 920,
+  "OCM scribble": 831
+ },
+ "cloudsen12_rows": 89527,
+ "cloudsen12_split_tags": {
+  "train": 86773,
+  "test": 1480,
+  "validation": 1274
+ },
+ "cloudsen12_ids_matching_eval_images": [],
+ "cloudsen12_matching_rows_by_subset": {},
+ "test_cloudsen12_training_rows_sharing_an_acquisition": 56,
+ "test_acquisitions_shared_with_cloudsen12_training_rows": 16,
+ "non_cloudsen12_rows": 11001,
+ "non_cloudsen12_rows_with_tile_and_date": 11001,
+ "non_cloudsen12_same_tile_and_date_as_eval": [],
+ "ocm_custom_scenes_with_latlon": 1751,
+ "eval_images_possibly_overlapping_ocm_custom_scene": [
+  "ROI_03381__20190507T174919_20190507T174933_T14VNJ",
+  "ROI_03381__20190718T173911_20190718T174740_T14VNJ",
+  "ROI_03381__20190916T173951_20190916T173948_T14VNJ",
+  "ROI_03381__20200322T174919_20200322T175638_T14VNJ",
+  "ROI_03381__20200615T174911_20200615T174914_T14VNJ",
+  "ROI_12023__20181219T133221_20181219T133216_T23MMR",
+  "ROI_12023__20190617T133231_20190617T133228_T23MMR",
+  "ROI_12023__20190816T133231_20190816T133227_T23MMR",
+  "ROI_12023__20200412T133221_20200412T133223_T23MMR",
+  "ROI_12023__20200721T133231_20200721T133230_T23MMR"
+ ],
+ "eval_images_on_a_kappaset_mgrs_tile_any_date": 94,
+ "eval_images_total": 1510
+}
+unparsed examples: []
+uv run python scripts/sweep.py
+<clone>/.venv/lib/python3.12/site-packages/numpy/lib/_nanfunctions_impl.py:1573: RuntimeWarning: All-NaN slice encountered
+  return _nanquantile_unchecked(
+                               method                                 rule  achievable  threshold_native  val_leak  test_leak  test_leak_lo  test_leak_hi  test_discard  test_discard_lo  test_discard_hi
+               OmniCloudMask v4 | l1c    leak <= 2% (chosen on validation)        True             0.853     0.020      0.020         0.014         0.026         0.136            0.124            0.149
+               OmniCloudMask v4 | l1c    leak <= 5% (chosen on validation)        True             0.527     0.050      0.052         0.044         0.060         0.056            0.049            0.063
+               OmniCloudMask v4 | l1c discard <= 2% (chosen on validation)        True             0.186     0.105      0.110         0.100         0.119         0.016            0.013            0.020
+               OmniCloudMask v4 | l1c discard <= 5% (chosen on validation)        True             0.429     0.061      0.064         0.056         0.073         0.042            0.036            0.048
+               OmniCloudMask v4 | l2a    leak <= 2% (chosen on validation)        True             0.853     0.020      0.021         0.015         0.028         0.138            0.125            0.151
+               OmniCloudMask v4 | l2a    leak <= 5% (chosen on validation)        True             0.547     0.050      0.051         0.043         0.060         0.060            0.052            0.067
+               OmniCloudMask v4 | l2a discard <= 2% (chosen on validation)        True             0.186     0.108      0.113         0.103         0.124         0.016            0.013            0.020
+               OmniCloudMask v4 | l2a discard <= 5% (chosen on validation)        True             0.437     0.063      0.065         0.057         0.074         0.043            0.037            0.049
+s2cloudless raw probability | product    leak <= 2% (chosen on validation)       False            -0.010       NaN        NaN           NaN           NaN         1.000            1.000            1.000
+s2cloudless raw probability | product    leak <= 5% (chosen on validation)       False            -0.010       NaN        NaN           NaN           NaN         1.000            1.000            1.000
+s2cloudless raw probability | product discard <= 2% (chosen on validation)        True             0.810     0.304      0.317         0.304         0.330         0.021            0.014            0.028
+s2cloudless raw probability | product discard <= 5% (chosen on validation)        True             0.500     0.251      0.266         0.253         0.280         0.048            0.038            0.058
+            Cloud Score+ cs | product    leak <= 2% (chosen on validation)        True             0.804     0.020      0.022         0.011         0.036         0.590            0.558            0.620
+            Cloud Score+ cs | product    leak <= 5% (chosen on validation)        True             0.651     0.050      0.057         0.047         0.069         0.219            0.197            0.243
+            Cloud Score+ cs | product discard <= 2% (chosen on validation)        True             0.400     0.221      0.229         0.214         0.245         0.024            0.011            0.041
+            Cloud Score+ cs | product discard <= 5% (chosen on validation)        True             0.490     0.150      0.162         0.148         0.178         0.044            0.030            0.063
+        Cloud Score+ cs_cdf | product    leak <= 2% (chosen on validation)        True             0.875     0.017      0.024         0.014         0.036         0.447            0.415            0.476
+        Cloud Score+ cs_cdf | product    leak <= 5% (chosen on validation)        True             0.832     0.049      0.049         0.038         0.061         0.206            0.182            0.230
+        Cloud Score+ cs_cdf | product discard <= 2% (chosen on validation)        True             0.615     0.214      0.212         0.198         0.229         0.024            0.010            0.043
+        Cloud Score+ cs_cdf | product discard <= 5% (chosen on validation)        True             0.713     0.141      0.146         0.131         0.162         0.045            0.030            0.065
+uv run python scripts/figures.py
+uv run python scripts/examples.py
+[('ROI_00936__20191015T080911_20191015T083220_T35LPK', 'Thick cloud over water accepted'), ('ROI_11216__20191018T072909_20191018T074707_T37NHJ', 'Cloud missed, mostly clear scene'), ('ROI_03652__20200309T101021_20200309T101020_T32SME', 'Clear ground discarded, cloudy scene')]
+uv run python scripts/provenance.py
+{
+ "packages": {
+  "omnicloudmask": "1.8.1",
+  "torch": "2.10.0+cu128",
+  "tacoreader": "0.5.6",
+  "segmentation-models-pytorch": "0.6.0",
+  "timm": "1.0.30"
+ },
+ "tacofoundation/cloudsen12": {
+  "revision_used": "f9490f7de11b4f387f72ef800e73ccbb754711de",
+  "remote_head_at_build": "f9490f7de11b4f387f72ef800e73ccbb754711de"
+ },
+ "NickWright/OmniCloudMask-Combined-Training-Dataset": {
+  "revision_used": "cf7f958be9954301848d6d08fdb420292134b0a9",
+  "remote_head_at_build": "cf7f958be9954301848d6d08fdb420292134b0a9"
+ },
+ "NickWright/OmniCloudMask": {
+  "revision_used": "not pinned by revision; weights verified by sha256 below",
+  "remote_head_at_build": "c9a4fb88188709127aa25cfe51ae7fd41b0132f8"
+ },
+ "ocm_weights_sha256": {
+  "PM_model_OCM_7.97_R_G_NIR_3_smp_edgenext_small.usi_in1k_PT_state.safetensors": "d5fe67ad00f6fdb73eb8382ad925849e97fb82cedb46225344afff1a734a9c1d",
+  "PM_model_OCM_7.97_R_G_NIR_3_smp_regnety_004.pycls_in1k_PT_state.safetensors": "7f6e4202e17ee73efa4aba7abb5c34f4f90a9f7eb42480820714994dff2db660"
+ },
+ "ocm_model_version": 4.0,
+ "cloudsen12_dataset_version": "1.1.2 (per dataset card)"
+}
+uv run python scripts/build_docs.py
+wrote README.md, site/cloudmask-audit.md, report/cloudmask-acceptance-audit.pdf
+exit=0 finished 2026-10-27T01:25:30-05:00

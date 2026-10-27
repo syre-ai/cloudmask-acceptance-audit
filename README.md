@@ -25,10 +25,13 @@ nobody has measured on the buyer's own terms.
 - **Training-overlap screen:** OmniCloudMask's published training set includes CloudSEN12
   scribble and 2k patches from *all* splits, so the evaluation scenes were checked against its
   training records (100,528 rows, pinned revision): 0 shared scene
-  ids (including 2,754 test/validation-tagged training rows),
-  0 shared acquisitions, and 10 evaluation images whose
-  footprint may overlap a custom training scene (conservative disc around its named centre)
-  were removed. Kappaset names only its ~110 km tile; removing the 50
+  ids (including 2,754 test/validation-tagged training rows) and no
+  spatial overlap with any CloudSEN12 training patch. 16 test acquisitions
+  (tile and date) also supplied other, non-overlapping CloudSEN12 patches to training
+  (56 training rows); same-date imagery nearby is a residual dependence.
+  No acquisition is shared with the non-CloudSEN12 training sources (0
+  matches), and 10 evaluation images whose footprint may overlap a custom
+  training scene (conservative disc around its named centre) were removed. Kappaset names only its ~110 km tile; removing the 50
   test images on those tiles gives leak 6.2% (headline 6.1%). This is a
   screen with stated limits, not proof that no overlap remains.
 - **Baselines** (as shipped with CloudSEN12+): Sentinel-2 QA60, Sen2Cor SCL, s2cloudless
@@ -64,7 +67,7 @@ Paired against OmniCloudMask: SEnSeI v2 leak +0.1 pp
 ![Leak vs discard](results/figures/tradeoff.png)
 
 **Operating points** (chosen on validation, reported on test). For a 2% leak target,
-OmniCloudMask: accept if P(clear) ≥ 0.8529, giving leak 2.0% [1.4, 2.6]
+OmniCloudMask: accept if rint(255 x P(clear)) ≥ 218 in float32, i.e. P(clear) ≥ about 0.85294, giving leak 2.0% [1.4, 2.6]
 and discard 13.6% [12.4, 14.9]; Cloud Score+ discards
 59% at the same target. Thresholding s2cloudless's *raw* probability (no
 averaging or dilation) never gets leak below 7.2%; it has no shadow class.
@@ -116,7 +119,7 @@ moderate simulated effects; **Info** was checked with small or no measured effec
 | Severity | Finding | Recommendation |
 |---|---|---|
 | High | Scene filters built on the Sen2Cor SCL band keep cloudy scenes | Gate on OmniCloudMask-derived cover instead of the SCL band. Measured: cloud+shadow inside kept patches after masking falls from 3.4% to 1.6% [0.7, 2.6]. Full-granule filtering was not tested. |
-| Medium | At its default setting, about 6% of accepted pixels are cloud or shadow | For leak-sensitive uses (time series, change detection): accept if P(clear) ≥ 0.8529 (chosen on the validation split for a 2% leak target). Test: leak 2.0% [1.4, 2.6] at 13.6% discard. Buffering the mask is the weaker lever: none of the tested buffers (0 to 8 px) met the target; 8 px leaks 3.6% at 13.1% discard. |
+| Medium | At its default setting, about 6% of accepted pixels are cloud or shadow | For leak-sensitive uses (time series, change detection): accept if rint(255 x P(clear)) ≥ 218 in float32, i.e. P(clear) ≥ about 0.85294 (chosen on the validation split for a 2% leak target). Test: leak 2.0% [1.4, 2.6] at 13.6% discard. Buffering the mask is the weaker lever: none of the tested buffers (0 to 8 px) met the target; 8 px leaks 3.6% at 13.1% discard. |
 | Medium | Coarse data resampled onto a finer grid is over-masked (simulated) | Where the pipeline allows, run the mask on the sensor's native grid and resample the mask. If imagery must be resampled to a finer grid first, validate the mask on that product; real resamplers and sensor optics differ from this simulation. |
 | Medium | Clipping bright reflectance lets cloud through (simulated) | Feed unclipped reflectance; avoid running the mask on stretched visual products. |
 | Medium | Higher leak over water (11.0% vs 6.1% overall) | For coastal, inland-water and flood work, spot-check a local sample; the stricter threshold above was not validated separately for water. |

@@ -19,6 +19,8 @@
  },
  "cloudsen12_ids_matching_eval_images": [],
  "cloudsen12_matching_rows_by_subset": {},
+ "test_cloudsen12_training_rows_sharing_an_acquisition": 56,
+ "test_acquisitions_shared_with_cloudsen12_training_rows": 16,
  "non_cloudsen12_rows": 11001,
  "non_cloudsen12_rows_with_tile_and_date": 11001,
  "non_cloudsen12_same_tile_and_date_as_eval": [],

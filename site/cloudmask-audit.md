@@ -19,7 +19,8 @@ An audit pipeline that answers the buyer's question for
 - metrics phrased as the decision: **leak** (cloud in the pixels you accept) and **discard**
   (clear ground you throw away), plus a scene-filter test;
 - a screen of the model's own published training records against the test scenes, removing
-  anything that might overlap;
+  scenes flagged as possibly overlapping (one training source can only be screened at
+  ~110 km and is covered by a sensitivity check instead);
 - side-by-side comparison with the masks that ship with Sentinel-2 products;
 - failure analysis on real scenes, a simulated stress test, and settings chosen on one data
   split and checked on another.

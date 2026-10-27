@@ -359,9 +359,9 @@ s2cloudless raw probability | product,0.98000,0.09153,0.59725
 s2cloudless raw probability | product,0.99000,0.08554,0.72086
 s2cloudless raw probability | product,1.00000,0.07236,0.90034
 s2cloudless raw probability | product,1.01000,,1.00000
-Cloud Score+ cs | product,0.00000,0.47224,0.00000
+Cloud Score+ cs | product,0.00000,0.47180,0.01213
 Cloud Score+ cs | product,0.01000,0.45999,0.01214
-Cloud Score+ cs | product,0.02000,0.45264,0.01214
+Cloud Score+ cs | product,0.02000,0.44905,0.01214
 Cloud Score+ cs | product,0.03000,0.44120,0.01221
 Cloud Score+ cs | product,0.04000,0.42962,0.01221
 Cloud Score+ cs | product,0.05000,0.42269,0.01221
@@ -370,7 +370,7 @@ Cloud Score+ cs | product,0.07000,0.40759,0.01234
 Cloud Score+ cs | product,0.08000,0.39940,0.01243
 Cloud Score+ cs | product,0.09000,0.39432,0.01250
 Cloud Score+ cs | product,0.10000,0.38725,0.01255
-Cloud Score+ cs | product,0.11000,0.38282,0.01265
+Cloud Score+ cs | product,0.11000,0.38066,0.01266
 Cloud Score+ cs | product,0.12000,0.37643,0.01268
 Cloud Score+ cs | product,0.13000,0.37034,0.01284
 Cloud Score+ cs | product,0.14000,0.36644,0.01288
@@ -381,7 +381,7 @@ Cloud Score+ cs | product,0.18000,0.34787,0.01321
 Cloud Score+ cs | product,0.19000,0.34235,0.01338
 Cloud Score+ cs | product,0.20000,0.33870,0.01350
 Cloud Score+ cs | product,0.21000,0.33334,0.01383
-Cloud Score+ cs | product,0.22000,0.32975,0.01397
+Cloud Score+ cs | product,0.22000,0.32795,0.01405
 Cloud Score+ cs | product,0.23000,0.32435,0.01421
 Cloud Score+ cs | product,0.24000,0.31890,0.01446
 Cloud Score+ cs | product,0.25000,0.31523,0.01465
@@ -390,7 +390,7 @@ Cloud Score+ cs | product,0.27000,0.30583,0.01531
 Cloud Score+ cs | product,0.28000,0.30003,0.01566
 Cloud Score+ cs | product,0.29000,0.29604,0.01611
 Cloud Score+ cs | product,0.30000,0.28985,0.01654
-Cloud Score+ cs | product,0.31000,0.28563,0.01685
+Cloud Score+ cs | product,0.31000,0.28347,0.01701
 Cloud Score+ cs | product,0.32000,0.27905,0.01733
 Cloud Score+ cs | product,0.33000,0.27219,0.01785
 Cloud Score+ cs | product,0.34000,0.26740,0.01827
@@ -400,8 +400,8 @@ Cloud Score+ cs | product,0.37000,0.24747,0.02079
 Cloud Score+ cs | product,0.38000,0.24224,0.02151
 Cloud Score+ cs | product,0.39000,0.23426,0.02282
 Cloud Score+ cs | product,0.40000,0.22879,0.02367
-Cloud Score+ cs | product,0.41000,0.22047,0.02505
-Cloud Score+ cs | product,0.42000,0.21483,0.02609
+Cloud Score+ cs | product,0.41000,0.22042,0.02505
+Cloud Score+ cs | product,0.42000,0.21202,0.02665
 Cloud Score+ cs | product,0.43000,0.20636,0.02789
 Cloud Score+ cs | product,0.44000,0.19772,0.03019
 Cloud Score+ cs | product,0.45000,0.19189,0.03194
@@ -410,7 +410,7 @@ Cloud Score+ cs | product,0.47000,0.17704,0.03766
 Cloud Score+ cs | product,0.48000,0.16801,0.04153
 Cloud Score+ cs | product,0.49000,0.16198,0.04448
 Cloud Score+ cs | product,0.50000,0.15300,0.04948
-Cloud Score+ cs | product,0.51000,0.14702,0.05330
+Cloud Score+ cs | product,0.51000,0.14407,0.05541
 Cloud Score+ cs | product,0.52000,0.13814,0.05984
 Cloud Score+ cs | product,0.53000,0.12947,0.06679
 Cloud Score+ cs | product,0.54000,0.12399,0.07232
@@ -421,7 +421,7 @@ Cloud Score+ cs | product,0.58000,0.09788,0.10491
 Cloud Score+ cs | product,0.59000,0.09021,0.11762
 Cloud Score+ cs | product,0.60000,0.08533,0.12694
 Cloud Score+ cs | product,0.61000,0.07833,0.14254
-Cloud Score+ cs | product,0.62000,0.07392,0.15416
+Cloud Score+ cs | product,0.62000,0.07179,0.16015
 Cloud Score+ cs | product,0.63000,0.06777,0.17258
 Cloud Score+ cs | product,0.64000,0.06220,0.19379
 Cloud Score+ cs | product,0.65000,0.05848,0.21014
@@ -430,7 +430,7 @@ Cloud Score+ cs | product,0.67000,0.04981,0.25473
 Cloud Score+ cs | product,0.68000,0.04508,0.28199
 Cloud Score+ cs | product,0.69000,0.04242,0.30126
 Cloud Score+ cs | product,0.70000,0.03901,0.33047
-Cloud Score+ cs | product,0.71000,0.03703,0.34965
+Cloud Score+ cs | product,0.71000,0.03615,0.35933
 Cloud Score+ cs | product,0.72000,0.03454,0.37954
 Cloud Score+ cs | product,0.73000,0.03242,0.40924
 Cloud Score+ cs | product,0.74000,0.03117,0.42772
@@ -441,7 +441,7 @@ Cloud Score+ cs | product,0.78000,0.02535,0.52388
 Cloud Score+ cs | product,0.79000,0.02299,0.55089
 Cloud Score+ cs | product,0.80000,0.02223,0.57010
 Cloud Score+ cs | product,0.81000,0.02194,0.59946
-Cloud Score+ cs | product,0.82000,0.02157,0.61843
+Cloud Score+ cs | product,0.82000,0.02142,0.62760
 Cloud Score+ cs | product,0.83000,0.02105,0.64679
 Cloud Score+ cs | product,0.84000,0.02011,0.67564
 Cloud Score+ cs | product,0.85000,0.01865,0.69371
@@ -450,7 +450,7 @@ Cloud Score+ cs | product,0.87000,0.01723,0.73471
 Cloud Score+ cs | product,0.88000,0.01781,0.76294
 Cloud Score+ cs | product,0.89000,0.01855,0.78220
 Cloud Score+ cs | product,0.90000,0.01936,0.81087
-Cloud Score+ cs | product,0.91000,0.02001,0.82946
+Cloud Score+ cs | product,0.91000,0.02023,0.83803
 Cloud Score+ cs | product,0.92000,0.02062,0.85381
 Cloud Score+ cs | product,0.93000,0.02017,0.87351
 Cloud Score+ cs | product,0.94000,0.02063,0.88611
@@ -460,9 +460,9 @@ Cloud Score+ cs | product,0.97000,0.01076,0.93933
 Cloud Score+ cs | product,0.98000,0.00499,0.95031
 Cloud Score+ cs | product,0.99000,0.00370,0.96938
 Cloud Score+ cs | product,1.00000,0.00005,0.98162
-Cloud Score+ cs_cdf | product,0.00000,0.47224,0.00000
+Cloud Score+ cs_cdf | product,0.00000,0.47231,0.01425
 Cloud Score+ cs_cdf | product,0.01000,0.47216,0.01425
-Cloud Score+ cs_cdf | product,0.02000,0.47162,0.01425
+Cloud Score+ cs_cdf | product,0.02000,0.47077,0.01425
 Cloud Score+ cs_cdf | product,0.03000,0.46386,0.01425
 Cloud Score+ cs_cdf | product,0.04000,0.44967,0.01425
 Cloud Score+ cs_cdf | product,0.05000,0.44163,0.01425
@@ -471,9 +471,9 @@ Cloud Score+ cs_cdf | product,0.07000,0.42568,0.01427
 Cloud Score+ cs_cdf | product,0.08000,0.41817,0.01427
 Cloud Score+ cs_cdf | product,0.09000,0.41372,0.01427
 Cloud Score+ cs_cdf | product,0.10000,0.40764,0.01431
-Cloud Score+ cs_cdf | product,0.11000,0.40376,0.01431
+Cloud Score+ cs_cdf | product,0.11000,0.40189,0.01431
 Cloud Score+ cs_cdf | product,0.12000,0.39836,0.01431
-Cloud Score+ cs_cdf | product,0.13000,0.39340,0.01432
+Cloud Score+ cs_cdf | product,0.13000,0.39336,0.01437
 Cloud Score+ cs_cdf | product,0.14000,0.39020,0.01440
 Cloud Score+ cs_cdf | product,0.15000,0.38566,0.01447
 Cloud Score+ cs_cdf | product,0.16000,0.38279,0.01451
@@ -482,7 +482,7 @@ Cloud Score+ cs_cdf | product,0.18000,0.37574,0.01460
 Cloud Score+ cs_cdf | product,0.19000,0.37171,0.01463
 Cloud Score+ cs_cdf | product,0.20000,0.36917,0.01464
 Cloud Score+ cs_cdf | product,0.21000,0.36549,0.01466
-Cloud Score+ cs_cdf | product,0.22000,0.36312,0.01467
+Cloud Score+ cs_cdf | product,0.22000,0.36195,0.01468
 Cloud Score+ cs_cdf | product,0.23000,0.35964,0.01469
 Cloud Score+ cs_cdf | product,0.24000,0.35627,0.01470
 Cloud Score+ cs_cdf | product,0.25000,0.35406,0.01471
@@ -491,7 +491,7 @@ Cloud Score+ cs_cdf | product,0.27000,0.34864,0.01473
 Cloud Score+ cs_cdf | product,0.28000,0.34539,0.01475
 Cloud Score+ cs_cdf | product,0.29000,0.34321,0.01479
 Cloud Score+ cs_cdf | product,0.30000,0.33991,0.01489
-Cloud Score+ cs_cdf | product,0.31000,0.33773,0.01498
+Cloud Score+ cs_cdf | product,0.31000,0.33665,0.01503
 Cloud Score+ cs_cdf | product,0.32000,0.33448,0.01512
 Cloud Score+ cs_cdf | product,0.33000,0.33122,0.01527
 Cloud Score+ cs_cdf | product,0.34000,0.32902,0.01536
@@ -501,8 +501,8 @@ Cloud Score+ cs_cdf | product,0.37000,0.32004,0.01573
 Cloud Score+ cs_cdf | product,0.38000,0.31775,0.01581
 Cloud Score+ cs_cdf | product,0.39000,0.31420,0.01598
 Cloud Score+ cs_cdf | product,0.40000,0.31183,0.01607
-Cloud Score+ cs_cdf | product,0.41000,0.30821,0.01624
-Cloud Score+ cs_cdf | product,0.42000,0.30567,0.01638
+Cloud Score+ cs_cdf | product,0.41000,0.30819,0.01624
+Cloud Score+ cs_cdf | product,0.42000,0.30443,0.01644
 Cloud Score+ cs_cdf | product,0.43000,0.30189,0.01655
 Cloud Score+ cs_cdf | product,0.44000,0.29800,0.01674
 Cloud Score+ cs_cdf | product,0.45000,0.29528,0.01687
@@ -511,7 +511,7 @@ Cloud Score+ cs_cdf | product,0.47000,0.28808,0.01730
 Cloud Score+ cs_cdf | product,0.48000,0.28340,0.01755
 Cloud Score+ cs_cdf | product,0.49000,0.28009,0.01774
 Cloud Score+ cs_cdf | product,0.50000,0.27489,0.01804
-Cloud Score+ cs_cdf | product,0.51000,0.27126,0.01826
+Cloud Score+ cs_cdf | product,0.51000,0.26942,0.01837
 Cloud Score+ cs_cdf | product,0.52000,0.26564,0.01861
 Cloud Score+ cs_cdf | product,0.53000,0.25979,0.01902
 Cloud Score+ cs_cdf | product,0.54000,0.25575,0.01931
@@ -522,7 +522,7 @@ Cloud Score+ cs_cdf | product,0.58000,0.23377,0.02142
 Cloud Score+ cs_cdf | product,0.59000,0.22682,0.02227
 Cloud Score+ cs_cdf | product,0.60000,0.22212,0.02289
 Cloud Score+ cs_cdf | product,0.61000,0.21492,0.02391
-Cloud Score+ cs_cdf | product,0.62000,0.21006,0.02467
+Cloud Score+ cs_cdf | product,0.62000,0.20762,0.02508
 Cloud Score+ cs_cdf | product,0.63000,0.20271,0.02598
 Cloud Score+ cs_cdf | product,0.64000,0.19519,0.02748
 Cloud Score+ cs_cdf | product,0.65000,0.19007,0.02863
@@ -531,7 +531,7 @@ Cloud Score+ cs_cdf | product,0.67000,0.17673,0.03219
 Cloud Score+ cs_cdf | product,0.68000,0.16850,0.03485
 Cloud Score+ cs_cdf | product,0.69000,0.16296,0.03693
 Cloud Score+ cs_cdf | product,0.70000,0.15443,0.04051
-Cloud Score+ cs_cdf | product,0.71000,0.14861,0.04358
+Cloud Score+ cs_cdf | product,0.71000,0.14573,0.04528
 Cloud Score+ cs_cdf | product,0.72000,0.13992,0.04868
 Cloud Score+ cs_cdf | product,0.73000,0.13094,0.05470
 Cloud Score+ cs_cdf | product,0.74000,0.12468,0.05947
@@ -542,7 +542,7 @@ Cloud Score+ cs_cdf | product,0.78000,0.09372,0.09265
 Cloud Score+ cs_cdf | product,0.79000,0.08446,0.10744
 Cloud Score+ cs_cdf | product,0.80000,0.07832,0.11937
 Cloud Score+ cs_cdf | product,0.81000,0.06883,0.14103
-Cloud Score+ cs_cdf | product,0.82000,0.06222,0.15866
+Cloud Score+ cs_cdf | product,0.82000,0.05885,0.16901
 Cloud Score+ cs_cdf | product,0.83000,0.05187,0.19261
 Cloud Score+ cs_cdf | product,0.84000,0.04246,0.23533
 Cloud Score+ cs_cdf | product,0.85000,0.03732,0.27047
@@ -551,7 +551,7 @@ Cloud Score+ cs_cdf | product,0.87000,0.02747,0.38657
 Cloud Score+ cs_cdf | product,0.88000,0.02221,0.48051
 Cloud Score+ cs_cdf | product,0.89000,0.01776,0.56269
 Cloud Score+ cs_cdf | product,0.90000,0.00871,0.71919
-Cloud Score+ cs_cdf | product,0.91000,0.00388,0.82856
+Cloud Score+ cs_cdf | product,0.91000,0.00348,0.87095
 Cloud Score+ cs_cdf | product,0.92000,0.00389,0.93337
 Cloud Score+ cs_cdf | product,0.93000,0.00636,0.97469
 Cloud Score+ cs_cdf | product,0.94000,0.01287,0.98837

@@ -1,0 +1,3 @@
+gate_cover_from,threshold,scenes_kept,scenes_total,kept_truly_over_threshold,truly_ok_scenes_rejected,pixel_leak_in_kept_after_ocm_mask,leak_lo,leak_hi
+OmniCloudMask,0.1000,253,965,0.0593,0.0403,0.0159,0.0073,0.0273
+Sen2Cor SCL,0.1000,366,965,0.4344,0.1653,0.0333,0.0249,0.0425

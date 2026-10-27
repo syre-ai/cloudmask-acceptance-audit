@@ -55,3 +55,18 @@ def test_gain_offset_is_linear():
     img = np.full((3, 8, 8), 1000, np.uint16)
     out = gain_offset(img, gains=(1.0, 2.0, 1.0), offsets=(0.0, 0.0, 0.01))
     assert out[0, 0, 0] == 1000 and out[1, 0, 0] == 2000 and out[2, 0, 0] == 1100
+
+
+def test_buffer_grows_cloud_not_abstention():
+    import sys
+
+    sys.path.insert(0, "scripts")
+    from mitigations import buffered
+
+    pred = np.zeros((9, 9), np.uint8)
+    pred[4, 4] = 2
+    pred[0, 0] = 255
+    out = buffered(pred, 1)
+    assert out[4, 4] == 2 and out[3, 4] == 1 and out[4, 5] == 1 and out[3, 3] == 0
+    assert out[0, 1] == 0 and out[0, 0] == 255
+    assert np.array_equal(buffered(pred, 0), pred)

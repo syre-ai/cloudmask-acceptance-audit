@@ -245,6 +245,9 @@ Paired against OmniCloudMask: SEnSeI v2 leak {N['sensei_d_leak_rate']}
 
 ![Leak vs discard](results/figures/tradeoff.png)
 
+An interactive version (drag the threshold, watch leak and discard move) is generated at
+`site/explorer/index.html`, a single self-contained page for the website.
+
 **Operating points** (chosen on validation, reported on test). For a 2% leak target,
 OmniCloudMask: {N['ocm_2pct_rule']}, giving leak {N['ocm_2pct_leak']} {N['ocm_2pct_leak_ci']}
 and discard {N['ocm_2pct_discard']} {N['ocm_2pct_discard_ci']}; Cloud Score+ discards

@@ -50,6 +50,7 @@ figures:
 docs:            ## README results block, site write-up, client PDF
 	$(PY) scripts/provenance.py
 	$(PY) scripts/build_docs.py
+	$(PY) scripts/explorer.py
 
 clean-results:
 	rm -rf data/results results/*.csv

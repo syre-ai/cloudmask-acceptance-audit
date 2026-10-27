@@ -66,6 +66,9 @@ Paired against OmniCloudMask: SEnSeI v2 leak +0.1 pp
 
 ![Leak vs discard](results/figures/tradeoff.png)
 
+An interactive version (drag the threshold, watch leak and discard move) is generated at
+`site/explorer/index.html`, a single self-contained page for the website.
+
 **Operating points** (chosen on validation, reported on test). For a 2% leak target,
 OmniCloudMask: accept if rint(255 x P(clear)) ≥ 218 in float32, i.e. P(clear) ≥ about 0.85294, giving leak 2.0% [1.4, 2.6]
 and discard 13.6% [12.4, 14.9]; Cloud Score+ discards

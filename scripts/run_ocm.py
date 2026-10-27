@@ -10,6 +10,7 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
+from cmaudit.baselines import NO_DECISION
 from cmaudit.infer import load_models, ocm_input, predict_probs, quantize
 from cmaudit.samples import load, manifest
 
@@ -29,9 +30,11 @@ def main() -> None:
             imgs = [ocm_input(load(level, t)["bands"]) for t in chunk]
             probs = predict_probs(models, imgs, dtype=torch.float32)
             for t, p in zip(chunk, probs):
-                np.savez_compressed(
-                    out / f"{t}.npz", probs=quantize(p), pred=p.argmax(0).astype(np.uint8)
-                )
+                pred = p.argmax(0).astype(np.uint8)
+                # OCM returns all-zero scores where its R/G/NIR inputs are nodata: that is
+                # "no decision", not class 0 (clear).
+                pred[p.sum(0) == 0] = NO_DECISION
+                np.savez_compressed(out / f"{t}.npz", probs=quantize(p), pred=pred)
 
 
 if __name__ == "__main__":

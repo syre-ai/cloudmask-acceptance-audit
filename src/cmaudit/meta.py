@@ -11,7 +11,9 @@ import pandas as pd
 from pyproj import Transformer
 from shapely.geometry import Polygon
 
-_HF = "https://huggingface.co/datasets/tacofoundation/cloudsen12/resolve/main"
+# Pinned dataset revision (CloudSEN12+ v1.1.2) so a rerun reads exactly the same bytes.
+REVISION = "f9490f7de11b4f387f72ef800e73ccbb754711de"
+_HF = f"https://huggingface.co/datasets/tacofoundation/cloudsen12/resolve/{REVISION}"
 # Shard URLs per mode (from the dataset's file listing). Passing them directly skips
 # tacoreader's registry lookup, one fewer request against Hugging Face rate limits.
 SHARDS = {

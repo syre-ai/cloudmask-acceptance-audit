@@ -45,6 +45,9 @@ def pixel_summary(cm: np.ndarray) -> dict:
         "leak_thin": cm[2, 0] / accepted if accepted else np.nan,
         "leak_shadow": cm[3, 0] / accepted if accepted else np.nan,
         "discard_rate": (true_clear - cm[0, 0]) / true_clear if true_clear else np.nan,
+        # share of truly cloudy/shadowed pixels that get accepted (meaningful in cloudy
+        # scenes, where leak_rate degenerates because almost nothing is truly clear)
+        "miss_rate": cm[1:, 0].sum() / cm[1:].sum() if cm[1:].sum() else np.nan,
         "accepted_share": accepted / total if total else np.nan,
         "true_clear_share": true_clear / total if total else np.nan,
     }
@@ -130,3 +133,28 @@ def summarize(cms: np.ndarray, groups: pd.Series, clusters: np.ndarray, stats: l
             row[s], row[f"{s}_lo"], row[f"{s}_hi"] = p, lo, hi
         rows.append(row)
     return pd.DataFrame(rows)
+
+
+def paired_bootstrap_diff(
+    cms_a: np.ndarray,
+    cms_b: np.ndarray,
+    clusters: np.ndarray,
+    stat: str,
+    n_boot: int = 1000,
+    seed: int = 0,
+) -> tuple[float, float, float]:
+    """stat(A) - stat(B) on the same images, resampling clusters jointly so the comparison is
+    paired. Returns (point, lo, hi) of a 95% percentile interval."""
+    codes, inv = np.unique(clusters, return_inverse=True)
+    pa = np.zeros((len(codes), N_CLASSES, N_CLASSES))
+    pb = np.zeros_like(pa)
+    np.add.at(pa, inv, cms_a)
+    np.add.at(pb, inv, cms_b)
+    point = pixel_summary(pa.sum(0))[stat] - pixel_summary(pb.sum(0))[stat]
+    rng = np.random.default_rng(seed)
+    d = np.empty(n_boot)
+    for i in range(n_boot):
+        pick = rng.integers(0, len(codes), len(codes))
+        d[i] = pixel_summary(pa[pick].sum(0))[stat] - pixel_summary(pb[pick].sum(0))[stat]
+    lo, hi = np.nanquantile(d, [0.025, 0.975])
+    return float(point), float(lo), float(hi)

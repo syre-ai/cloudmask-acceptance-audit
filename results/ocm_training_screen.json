@@ -1,0 +1,36 @@
+{
+ "training_rows": 100528,
+ "rows_by_subset": {
+  "CloudSEN12 high super res tiles": 33960,
+  "CloudSEN12 scribble": 20000,
+  "CloudSEN12 high": 16980,
+  "Kappaset": 9250,
+  "CloudSEN12 high super res raw": 8490,
+  "CloudSEN12 high planetary computer": 8403,
+  "CloudSEN12 2k": 1694,
+  "OCM hard negative": 920,
+  "OCM scribble": 831
+ },
+ "cloudsen12_rows": 89527,
+ "cloudsen12_split_tags": {
+  "train": 86773,
+  "test": 1480,
+  "validation": 1274
+ },
+ "cloudsen12_ids_matching_eval_images": [],
+ "cloudsen12_matching_rows_by_subset": {},
+ "non_cloudsen12_rows": 11001,
+ "non_cloudsen12_rows_with_tile_and_date": 11001,
+ "non_cloudsen12_same_tile_and_date_as_eval": [],
+ "ocm_custom_scenes_with_latlon": 1751,
+ "eval_images_within_2.6km_of_ocm_custom_scene_centre": [
+  "ROI_12023__20181219T133221_20181219T133216_T23MMR",
+  "ROI_12023__20190617T133231_20190617T133228_T23MMR",
+  "ROI_12023__20190816T133231_20190816T133227_T23MMR",
+  "ROI_12023__20200412T133221_20200412T133223_T23MMR",
+  "ROI_12023__20200721T133231_20200721T133230_T23MMR"
+ ],
+ "eval_images_on_a_kappaset_mgrs_tile_any_date": 94,
+ "eval_images_total": 1510,
+ "unparsed_examples": []
+}

@@ -39,10 +39,32 @@ def sen2cor(v: np.ndarray) -> np.ndarray:
     return out
 
 
-def s2cloudless(v: np.ndarray, threshold: float = 0.4) -> np.ndarray:
-    """s2cloudless cloud probability, stored as 0-100. The library's default decision
-    threshold is 0.4."""
-    return np.where(v.astype(np.float32) / 100.0 >= threshold, 1, 0).astype(np.uint8)
+def _disk(r: int) -> np.ndarray:
+    y, x = np.ogrid[-r : r + 1, -r : r + 1]
+    return (x * x + y * y <= r * r).astype(np.float32)
+
+
+def s2cloudless(v: np.ndarray, threshold: float = 0.4, average_over: int = 4,
+                dilation_size: int = 2) -> np.ndarray:
+    """s2cloudless cloud mask from its stored probability (0-100), reproducing the upstream
+    ``CloudDetector.get_mask_from_prob`` defaults: average the probability over a disk of
+    radius 4 px (reflect border), threshold with ``> 0.4``, dilate with a disk of radius 2 px.
+    Applied on the 10 m grid of the patch. Detects cloud only (no shadow class)."""
+    from scipy import ndimage
+
+    p = v.astype(np.float32) / 100.0
+    if average_over:
+        k = _disk(average_over)
+        p = ndimage.convolve(p, k / k.sum(), mode="reflect")
+    m = p > threshold
+    if dilation_size:
+        m = ndimage.binary_dilation(m, structure=_disk(dilation_size).astype(bool))
+    return m.astype(np.uint8)
+
+
+def s2cloudless_raw(v: np.ndarray, threshold: float = 0.4) -> np.ndarray:
+    """Raw per-pixel probability thresholded at > 0.4, no averaging or dilation."""
+    return (v.astype(np.float32) / 100.0 > threshold).astype(np.uint8)
 
 
 def cloudscore(v: np.ndarray, clear_threshold: float = 0.60, scale: float = 1e4) -> np.ndarray:
@@ -70,11 +92,18 @@ def sensei(v: np.ndarray) -> np.ndarray:
 BASELINES = {
     "QA60 (L1C bitmask)": ("cloudmask_qa60", qa60, False),
     "Sen2Cor SCL (L2A)": ("cloudmask_sen2cor", sen2cor, True),
-    "s2cloudless": ("cloudmask_s2cloudless", s2cloudless, False),
+    "s2cloudless (upstream defaults)": ("cloudmask_s2cloudless", s2cloudless, False),
+    "s2cloudless (raw > 0.4)": ("cloudmask_s2cloudless", s2cloudless_raw, False),
     "Cloud Score+ cs": ("cloudmask_cloudscore_cs_v1", cloudscore, False),
     "Cloud Score+ cs_cdf": ("cloudmask_cloudscore_cs_cdf_v1", cloudscore, False),
     "UnetMobV2 v1": ("cloudmask_unetmobv2_v1", cloudsen12_schema, True),
     "UnetMobV2 v2": ("cloudmask_unetmobv2_v2", cloudsen12_schema, True),
     "SEnSeI v2": ("cloudmask_sensei_v2", sensei, True),
 }
-"""name -> (extra layer, decoder, has_classes)."""
+"""name -> (extra layer, decoder, has_classes).
+
+Provenance caveat: UnetMobV2 v1/v2 were trained by the CloudSEN12 authors on CloudSEN12's own
+training split, so like OCM they are in-domain on this test set; the operational products
+(QA60, Sen2Cor, s2cloudless, Cloud Score+) were not built on CloudSEN12. QA60 and
+s2cloudless have no shadow class, so their leak includes shadow by construction.
+"""

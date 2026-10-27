@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 
 import geopandas as gpd
@@ -10,16 +11,18 @@ import pandas as pd
 from pyproj import Transformer
 from shapely.geometry import Polygon
 
-TACO_IDS = {
-    "l1c": "tacofoundation:cloudsen12-l1c",
-    "l2a": "tacofoundation:cloudsen12-l2a",
-    "extra": "tacofoundation:cloudsen12-extra",
+_HF = "https://huggingface.co/datasets/tacofoundation/cloudsen12/resolve/main"
+# Shard URLs per mode (from the dataset's file listing). Passing them directly skips
+# tacoreader's registry lookup, one fewer request against Hugging Face rate limits.
+SHARDS = {
+    "l1c": [f"{_HF}/cloudsen12-l1c.{i:04d}.part.taco" for i in range(5)],
+    "l2a": [f"{_HF}/cloudsen12-l2a.{i:04d}.part.taco" for i in range(6)],
+    "extra": [f"{_HF}/cloudsen12-extra.{i:04d}.part.taco" for i in range(3)],
 }
 
-# Columns we keep from the TACO index (everything except the remote byte offsets, which
-# tacoreader recomputes on load).
+# Columns we keep from the TACO index; internal:subfile holds each sample's byte range.
 KEEP = [
-    "tortilla:id", "tortilla:data_split", "stac:crs", "stac:geotransform", "stac:time_start",
+    "internal:subfile", "tortilla:id", "tortilla:data_split", "stac:crs", "stac:geotransform", "stac:time_start",
     "rai:ele", "rai:admin0", "roi_id", "equi_zone", "label_type", "s2_id", "real_proj_shape",
     "s2_mean_solar_zenith_angle", "thick_percentage", "thin_percentage",
     "cloud_shadow_percentage", "clear_percentage",
@@ -30,7 +33,7 @@ def load_index(mode: str) -> pd.DataFrame:
     """Fetch the remote TACO index for one mode (a few MB of metadata, no imagery)."""
     import tacoreader
 
-    ds = tacoreader.load(TACO_IDS[mode])
+    ds = tacoreader.load(SHARDS[mode])
     return pd.DataFrame({c: ds[c].values for c in ds.columns if c in KEEP})
 
 
@@ -70,7 +73,14 @@ def cache_index(mode: str, out_dir: Path) -> Path:
     out = out_dir / f"index_{mode}.parquet"
     if not out.exists():
         out_dir.mkdir(parents=True, exist_ok=True)
-        df = load_index(mode)
+        for attempt in range(6):  # the index read goes through rate-limited /resolve/
+            try:
+                df = load_index(mode)
+                break
+            except Exception:
+                if attempt == 5:
+                    raise
+                time.sleep(120)
         df["stac:geotransform"] = df["stac:geotransform"].map(lambda g: list(map(float, g)))
         df.to_parquet(out)
     return out

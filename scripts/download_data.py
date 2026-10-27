@@ -17,7 +17,7 @@ DATA = Path("data")
 
 
 def main() -> None:
-    for mode in ("l1c", "l2a"):
+    for mode in ("l1c", "l2a", "extra"):
         cache_index(mode, DATA / "index")
     idx = pd.read_parquet(DATA / "index" / "index_l1c.parquet")
     g = with_footprints(idx)
@@ -35,8 +35,9 @@ def main() -> None:
 
     ids = manifest["tortilla:id"].tolist()
     for mode in ("l1c", "l2a", "extra"):
+        index = pd.read_parquet(DATA / "index" / f"index_{mode}.parquet")
         for attempt in range(3):
-            failed = fetch(mode, ids, DATA / "samples" / mode)
+            failed = fetch(mode, index, ids, DATA / "samples" / mode)
             if not failed:
                 break
             print(f"{mode}: {len(failed)} failed, retry {attempt + 1}")
@@ -45,6 +46,7 @@ def main() -> None:
 
     from omnicloudmask.download_models import get_models
 
+    Path("models/ocm").mkdir(parents=True, exist_ok=True)
     get_models(model_dir=Path("models/ocm"), source="hugging_face", model_version=4.0)
     print("done")
 

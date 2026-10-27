@@ -60,3 +60,12 @@ def test_cluster_bootstrap_point_and_ci():
     assert lo <= p <= hi and 0 < p < 1
     tab = summarize(cms, pd.Series(np.repeat(["a", "b"], 20)), clusters, ["boa"], n_boot=50)
     assert set(tab["group"]) == {"a", "b"} and (tab["rois"] == 4).all()
+
+
+def test_baseline_decoders():
+    from cmaudit.baselines import NO_DECISION, cloudscore, qa60, s2cloudless, sen2cor
+
+    assert qa60(np.array([0, 1024, 2048, 16384, 32768], np.uint16)).tolist() == [0, 1, 2, 1, 2]
+    assert sen2cor(np.array([0, 3, 4, 8, 9, 10, 11])).tolist() == [NO_DECISION, 3, 0, 1, 1, 2, 0]
+    assert s2cloudless(np.array([0, 39, 40, 100])).tolist() == [0, 0, 1, 1]
+    assert cloudscore(np.array([0, 5999, 6000, 10000, 65000])).tolist() == [1, 1, 0, 0, NO_DECISION]

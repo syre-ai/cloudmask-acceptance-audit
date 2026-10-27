@@ -11,154 +11,158 @@ from __future__ import annotations
 import datetime as dt
 from pathlib import Path
 
-from cmaudit.numbers import load, pct, pp
+from cmaudit.numbers import load, pp
 
 TODAY = dt.date.today().isoformat()
-MATERIAL = 0.01  # a simulated degradation is "material" if it moves leak or discard by >= 1 pp
+REF = "Majority-label reference (label at coarse grid)"
+
+
+def P(N: dict, name: str, sev: float) -> dict:
+    """Stress-test entry (changes vs the clean run, absolute values, CIs)."""
+    return N["pt"][(name, round(float(sev), 3))]
 
 
 # --------------------------------------------------------------------------------------------
-# A4 summary, derived from the table with a stated rule
+# A4 table rows
 # --------------------------------------------------------------------------------------------
 def degradation_rows(N: dict) -> list[dict]:
     t = N["perturb"]
-    t = t[~t["perturbation"].str.startswith("Oracle")]
+    t = t[t["perturbation"] != REF]
     rows = []
     for name, g in t.groupby("perturbation", sort=False):
         cells = []
-        worst = 0.0
         for _, r in g.iterrows():
             sig_leak = r["d_leak_rate_lo"] > 0 or r["d_leak_rate_hi"] < 0
             sig_disc = r["d_discard_rate_lo"] > 0 or r["d_discard_rate_hi"] < 0
             cells.append(f"{_sev_label(name, r['severity'])}: leak {pp(r['d_leak_rate'])}"
                          f"{'' if sig_leak else ' (n.s.)'}, discard {pp(r['d_discard_rate'])}"
                          f"{'' if sig_disc else ' (n.s.)'}")
-            worst = max(worst, abs(r["d_leak_rate"]), abs(r["d_discard_rate"]))
-        rows.append({"name": name, "cells": cells, "worst": worst,
-                     "material": worst >= MATERIAL})
+        rows.append({"name": name, "cells": cells})
     return rows
 
 
 def _sev_label(name: str, sev) -> str:
     sev = float(sev)
+    if name.startswith(("Coarser", "Coarse data")):
+        return f"{int(sev) * 10} m"
     return {
         "Sensor noise": f"σ {sev:g}",
         "Optical blur": f"σ {sev:g} px",
-        "Coarser resolution": f"{int(sev) * 10} m",
         "NIR misregistration": f"{int(sev)} px",
         "8-bit JPEG delivery": f"q{int(sev)}",
-        "8-bit lossless (clip level)": f"clip {sev:g}",
-        "Coarse data on a 10 m grid": f"{int(sev) * 10} m",
-    }.get(name, f"{sev:g}")
+    }.get(name, f"clip {sev:g}")
 
 
-def oracle_rows(N: dict) -> dict:
-    """Absolute leak/discard at each coarse grid: OCM run natively there, OCM fed the same
-    data resampled to 10 m, and the oracle (expert label reduced to that grid). Differences in
-    the table are paired against the clean 10 m run, so absolute = clean + difference."""
-    t = N["perturb"]
-    get = {name: t[t["perturbation"] == name].set_index("severity")
-           for name in ("Oracle floor (label at coarse grid)", "Coarser resolution",
-                        "Coarse data on a 10 m grid")}
+def coarse_rows(N: dict) -> dict:
+    """Absolute leak/discard per coarse grid for: OCM on the native grid, OCM on the same data
+    put on a 10 m grid (bilinear, and nearest as a control), and the majority-label reference.
+    Absolute = clean 10 m value + paired change."""
     out = {}
-    for f in get["Coarser resolution"].index:
-        row = {}
-        for key, name in (("oracle", "Oracle floor (label at coarse grid)"),
-                          ("native", "Coarser resolution"), ("fine", "Coarse data on a 10 m grid")):
-            if f in get[name].index:
-                row[f"{key}_leak"] = N["_leak"] + get[name].loc[f, "d_leak_rate"]
-                row[f"{key}_discard"] = N["_discard"] + get[name].loc[f, "d_discard_rate"]
-        out[int(f)] = row
+    for f in (2, 3, 5):
+        out[f] = {key: P(N, name, f) for key, name in (
+            ("native", "Coarser resolution"), ("bilinear", "Coarse data on a 10 m grid"),
+            ("nearest", "Coarse data on a 10 m grid (nearest)"), ("ref", REF))}
     return out
 
 
 # --------------------------------------------------------------------------------------------
-# Findings, ranked
+# Findings, ranked. Severity rubric (stated in every document):
+#   High   - affects a default decision path, large error, measured on real data
+#   Medium - material error in a common condition on real data, a trade-off the client must
+#            set, or a large simulated effect on a common processing path
+#   Low    - limited evidence, or simulated effects of moderate size
+#   Info   - checked; small or no measured effect within the tested range
 # --------------------------------------------------------------------------------------------
 def findings(N: dict) -> list[dict]:
-    F = [
-        {"sev": "High", "title": "Scene filters built on the product's own cloud mask keep cloudy scenes",
-             "evidence": (f"Keeping scenes whose Sen2Cor SCL cloud+shadow cover is at most 10%: "
-                       f"{N['gate_scl_over']} of kept scenes are actually above 10% (expert labels); "
-                       f"SCL under-reports cover by {N['scl_cover_bias']} on average. The same gate "
-                       f"computed from OmniCloudMask: {N['gate_ocm_over']} above, and it rejects "
-                       f"{N['gate_ocm_rejected_ok']} of good scenes (SCL: {N['gate_scl_rejected_ok']})."),
-             "action": "Gate scenes on OmniCloudMask cover instead of the Sen2Cor SCL band.",
-             "rec": ("Gate scenes on OmniCloudMask-derived cover, not the SCL band. Tested: cloud "
-                  f"reaching the pipeline inside kept scenes falls from {N['gate_scl_leak']} to "
-                  f"{N['gate_ocm_leak']} {N['gate_ocm_leak_ci']} after masking.")},
+    f30, n30 = P(N, "Coarse data on a 10 m grid", 3), P(N, "Coarser resolution", 3)
+    nn30 = P(N, "Coarse data on a 10 m grid (nearest)", 3)
+    n20, n50 = P(N, "Coarser resolution", 2), P(N, "Coarser resolution", 5)
+    c03, q03 = P(N, "Clip only (16-bit)", 0.3), P(N, "8-bit lossless (clip level)", 0.3)
+    c10 = P(N, "Clip only (16-bit)", 1.0)
+    q06, j95, j50 = (P(N, "8-bit lossless (clip level)", 0.6), P(N, "8-bit JPEG delivery", 95),
+                     P(N, "8-bit JPEG delivery", 50))
+    no5, no10 = P(N, "Sensor noise", 0.005), P(N, "Sensor noise", 0.01)
+    mis4 = P(N, "NIR misregistration", 4)
+    return [
+        {"sev": "High", "title": "Scene filters built on the Sen2Cor SCL band keep cloudy scenes",
+         "evidence": (f"On the 5.1 km test patches, keeping a patch when its SCL cloud+shadow "
+                      f"cover is at most 10% keeps patches of which {N['gate_scl_over']} are above "
+                      f"10% by the expert labels; SCL under-reports cover by {N['scl_cover_bias']} on "
+                      f"average. The same rule using OmniCloudMask cover: {N['gate_ocm_over']} above, "
+                      f"and {N['gate_ocm_rejected_ok']} of good patches rejected (SCL: "
+                      f"{N['gate_scl_rejected_ok']})."),
+         "rec": (f"Gate on OmniCloudMask-derived cover instead of the SCL band. Measured: "
+                 f"cloud+shadow inside kept patches after masking falls from {N['gate_scl_leak']} "
+                 f"to {N['gate_ocm_leak']} {N['gate_ocm_leak_ci']}. Full-granule filtering was not "
+                 f"tested."),
+         "action": "Gate scenes on OmniCloudMask cover instead of the Sen2Cor SCL band."},
         {"sev": "Medium", "title": "At its default setting, about 6% of accepted pixels are cloud or shadow",
-             "evidence": (f"Leak {N['leak_rate']} {N['leak_rate_ci']} of accepted pixels; "
-                       f"thin cloud {N['leak_thin']}, shadow {N['leak_shadow']}, thick {N['leak_thick']}. "
-                       f"Discard {N['discard_rate']} {N['discard_rate_ci']} of clear pixels."),
-             "action": (f"For leak-sensitive uses, accept pixels only at P(clear) >= "
-                        f"{N['ocm_2pct_threshold']}; do not rely on buffering."),
-             "rec": (f"For leak-sensitive uses (time series, change detection), accept a pixel only "
-                  f"if P(clear) >= {N['ocm_2pct_threshold']} (chosen on the validation split): "
-                  f"test leak {N['ocm_2pct_leak']} {N['ocm_2pct_leak_ci']} at "
-                  f"{N['ocm_2pct_discard']} discard. Do not buffer the mask instead: an "
-                  f"{N['buffer_kmax']}-pixel buffer still leaks {N['buffer_kmax_leak']} at "
-                  f"{N['buffer_kmax_discard']} discard.")},
-        {"sev": "Medium", "title": f"Cloud over water leaks more often ({N['water_leak']} vs {N['leak_rate']} overall)",
-             "evidence": (f"Leak over water {N['water_leak']} {N['water_leak_ci']} across "
-                       f"{N['water_sites']} sites (thick cloud alone {N['water_leak_thick']}, vs "
-                       f"{N['grass_leak_thick']} over grassland); the two worst sites hold "
-                       f"{N['water_top2']} of it, so it is not one bad scene."),
-             "rec": "For coastal, inland-water and flood work, use the stricter threshold above and "
-                 "spot-check a local sample before relying on the mask.",
-             "action": "Spot-check a local sample before relying on the mask over water."},
+         "evidence": (f"Leak {N['leak_rate']} {N['leak_rate_ci']} of accepted pixels (thin cloud "
+                      f"{N['leak_thin']}, shadow {N['leak_shadow']}, thick {N['leak_thick']}); discard "
+                      f"{N['discard_rate']} {N['discard_rate_ci']} of clear pixels."),
+         "rec": (f"For leak-sensitive uses (time series, change detection): {N['ocm_2pct_rule']} "
+                 f"(chosen on the validation split for a 2% leak target). Test: leak "
+                 f"{N['ocm_2pct_leak']} {N['ocm_2pct_leak_ci']} at {N['ocm_2pct_discard']} discard. "
+                 f"Buffering the mask is the weaker lever: none of the tested buffers (0 to "
+                 f"{N['buffer_kmax']} px) met the target; {N['buffer_kmax']} px leaks "
+                 f"{N['buffer_kmax_leak']} at {N['buffer_kmax_discard']} discard."),
+         "action": f"For leak-sensitive uses, {N['ocm_2pct_rule'].replace('accept if', 'accept pixels only if')}."},
+        {"sev": "Medium", "title": "Coarse data resampled onto a finer grid is over-masked (simulated)",
+         "evidence": (f"Simulated 30 m data put on a 10 m grid with bilinear interpolation: discard "
+                      f"{f30['discard']} ({f30['ddiscard']}); with nearest-neighbour instead: "
+                      f"{nn30['discard']} ({nn30['ddiscard']}); the same 30 m data masked on its own "
+                      f"grid: {n30['discard']} ({n30['ddiscard']}). Native-grid runs at 20/30/50 m: "
+                      f"{n20['ddiscard']} / {n30['ddiscard']} / {n50['ddiscard']}."),
+         "rec": ("Where the pipeline allows, run the mask on the sensor's native grid and resample "
+                 "the mask. If imagery must be resampled to a finer grid first, validate the mask "
+                 "on that product; real resamplers and sensor optics differ from this simulation."),
+         "action": "Prefer masking on the native grid; validate before masking resampled imagery."},
+        {"sev": "Medium", "title": "Clipping bright reflectance lets cloud through (simulated)",
+         "evidence": (f"Clipping at 0.3 reflectance (close to the Sentinel-2 true-colour stretch) "
+                      f"raises leak by {c03['dleak']} with 16-bit values and {q03['dleak']} when also "
+                      f"quantized to 8 bits; clipping at 1.0: {c10['dleak']}. JPEG on top of 8-bit "
+                      f"(clip 0.6, {q06['dleak']}) adds little at quality 95 ({j95['dleak']} in "
+                      f"total) and more at quality 50 ({j50['dleak']})."),
+         "rec": "Feed unclipped reflectance; avoid running the mask on stretched visual products.",
+         "action": "Feed unclipped reflectance, not stretched visual products."},
+        {"sev": "Medium", "title": f"Higher leak over water ({N['water_leak']} vs {N['leak_rate']} overall)",
+         "evidence": (f"Leak over water {N['water_leak']} {N['water_leak_ci']} across "
+                      f"{N['water_sites']} sites (thick cloud {N['water_leak_thick']} vs "
+                      f"{N['grass_leak_thick']} over grassland); the two worst sites hold "
+                      f"{N['water_top2']} of it."),
+         "rec": ("For coastal, inland-water and flood work, spot-check a local sample; the "
+                 "stricter threshold above was not validated separately for water."),
+         "action": "Spot-check a local sample before relying on the mask over water."},
         {"sev": "Medium", "title": "Small amounts of cloud are missed in mostly clear scenes",
-             "evidence": (f"In scenes with 1-30% cloud, {N['light_miss']} {N['light_miss_ci']} of the "
-                       f"cloud and shadow present is accepted as clear (vs {N['overcast_miss']} in "
-                       f"overcast scenes). These are the scenes a cover gate keeps."),
-             "rec": "Covered by the threshold recommendation; the tested buffer does not fix it as "
-                 "cheaply."},
+         "evidence": (f"In scenes with 1-30% cloud, {N['light_miss']} {N['light_miss_ci']} of the "
+                      f"cloud and shadow present is accepted as clear (overcast scenes: "
+                      f"{N['overcast_miss']}). These are the scenes a cover gate keeps."),
+         "rec": "The threshold recommendation reduces leak overall; it was not tuned for this "
+                "regime separately."},
         {"sev": "Medium", "title": "Usable ground is discarded in heavily clouded scenes",
-             "evidence": (f"In scenes with 70-99% cloud, {N['heavy_discard']} {N['heavy_discard_ci']} "
-                       f"of the clear pixels are rejected."),
-             "rec": "If gap-filling from cloudy scenes matters, validate a lower threshold for that "
-                 "regime (not tested here).",
-             "action": "If you gap-fill from cloudy scenes, validate a lower threshold for them."},
-        {"sev": "Low", "title": "Snow and ice: higher leak, but weak evidence",
-             "evidence": (f"Leak {N['snow_leak']} {N['snow_leak_ci']}, only {N['snow_sites']} sites, "
-                       f"{N['snow_top2']} of it from two sites and mostly thin cloud over snow, where "
-                       f"expert labels are least certain."),
-             "rec": "Validate locally before using the mask in snow-covered regions."},
+         "evidence": (f"In scenes with 70-99% cloud, {N['heavy_discard']} {N['heavy_discard_ci']} "
+                      f"of the clear pixels are rejected."),
+         "rec": "If gap-filling from cloudy scenes matters, validate a lower threshold for that "
+                "regime (not tested here).",
+         "action": "If you gap-fill from cloudy scenes, validate a lower threshold for them."},
+        {"sev": "Low", "title": "Snow and ice: highest observed leak, weakest evidence",
+         "evidence": (f"Leak {N['snow_leak']} {N['snow_leak_ci']} over only {N['snow_sites']} sites, "
+                      f"{N['snow_top2']} of it from two sites, mostly thin cloud over snow, where "
+                      f"expert labels are least certain (not adjudicated here)."),
+         "rec": "Validate locally before relying on the mask in snow-covered regions."},
+        {"sev": "Low", "title": "Added sensor noise increases leak (simulated)",
+         "evidence": (f"Gaussian noise with a standard deviation of 0.005 reflectance raises leak "
+                      f"by {no5['dleak']} {no5['dleak_ci']}; 0.01 by {no10['dleak']}."),
+         "rec": "Re-validate before using the mask on noisier imagery than Sentinel-2."},
+        {"sev": "Info", "title": "Small measured effects within the tested range",
+         "evidence": (f"L1C vs L2A input: leak {N['l2a_d_leak_rate']} {N['l2a_d_leak_rate_ci']}. "
+                      f"One tested per-band gain/offset change: {N.get('gain_agreement', 'n/a')} "
+                      f"pixel agreement on a fifth of the test scenes (the model normalizes each band "
+                      f"per image). NIR shifted 4 px diagonally: discard {mis4['ddiscard']} "
+                      f"{mis4['ddiscard_ci']}, leak {mis4['dleak']} {mis4['dleak_ci']}."),
+         "rec": "None required within these ranges; larger shifts or other calibration errors "
+                "were not tested."},
     ]
-    F.insert(0, {
-        "sev": "High", "title": "Coarse imagery resampled to a finer grid is heavily over-masked",
-        "evidence": (f"Simulated: 30 m data put on a 10 m grid (bilinear, as data cubes do) raises "
-                     f"discard to {N['fine30_discard']} ({N['fine30_ddiscard']}); the same data run "
-                     f"on its native 30 m grid: {N['native30_discard']} ({N['native30_ddiscard']}). "
-                     f"At 20 m: {N['fine20_ddiscard']} vs {N['native20_ddiscard']}. Blur alone "
-                     f"(1 px) does the same: discard {N['blur1_ddiscard']}."),
-        "rec": "Run the mask on each sensor's native grid, then resample the mask, never the "
-               "imagery first. Tested: the native run keeps the discard increase near 2 pp.",
-        "action": "Run the mask on each sensor's native grid; resample the mask, not the imagery."})
-    F.insert(3, {
-        "sev": "Medium", "title": "Clipped 8-bit inputs let bright cloud through",
-        "evidence": (f"Simulated lossless 8-bit with reflectance clipped at 0.3 (close to the "
-                     f"Sentinel-2 true-colour stretch): leak {N['clip03_leak']} "
-                     f"({N['clip03_dleak']}); clip at 0.6: {N['clip06_dleak']}; at 1.0: "
-                     f"{N['clip10_dleak']}. JPEG compression adds only {N['jpeg95_extra']} at "
-                     f"quality 95 and {N['jpeg50_extra']} at quality 50 on top of clipping."),
-        "rec": "Feed unclipped reflectance (12/16-bit), or 8-bit only with the range kept to at "
-               "least 1.0 reflectance; do not run the mask on visual/stretched products.",
-        "action": "Feed unclipped reflectance; never run the mask on stretched 8-bit products."})
-    F.append({
-        "sev": "Low", "title": "Noisier sensors leak more",
-        "evidence": (f"Simulated Gaussian noise of 0.005 reflectance (several times Sentinel-2's) "
-                     f"raises leak by {N['noise005_dleak']}; 0.01 by {N['noise01_dleak']}."),
-        "rec": "Re-validate before using the mask on lower-SNR small-satellite imagery."})
-    F.append({
-        "sev": "Info", "title": "Verified non-issues",
-        "evidence": (f"L1C vs L2A input: leak {N['l2a_d_leak_rate']} {N['l2a_d_leak_rate_ci']}. "
-                  f"Per-band calibration drift: {N.get('gain_agreement', 'n/a')} pixel agreement "
-                  f"with the clean run (the model normalizes each band per image). "
-                  f"NIR misregistration up to 4 px: at most {N['mis_max_abs']} on leak or discard. "
-                  "Results are stable across continents, seasons and sun elevation (overlapping CIs)."),
-        "rec": "No action."})
-    return F
 
 
 # --------------------------------------------------------------------------------------------
@@ -166,12 +170,12 @@ def findings(N: dict) -> list[dict]:
 # --------------------------------------------------------------------------------------------
 def readme(N: dict) -> str:
     deg = degradation_rows(N)
-    orc = oracle_rows(N)
     deg_md = "\n".join(f"| {d['name']} | " + " · ".join(d["cells"]) + " |" for d in deg)
-    orc_md = "\n".join(
-        f"| {f * 10} m | {pct(v['native_leak'])} / {pct(v['native_discard'])} | "
-        f"{pct(v.get('fine_leak', float('nan')))} / {pct(v.get('fine_discard', float('nan')))} | "
-        f"{pct(v['oracle_leak'])} / {pct(v['oracle_discard'])} |" for f, v in sorted(orc.items()))
+    coarse_md = "\n".join(
+        f"| {f * 10} m | {v['native']['leak']} / {v['native']['discard']} | "
+        f"{v['bilinear']['leak']} / {v['bilinear']['discard']} | "
+        f"{v['nearest']['leak']} / {v['nearest']['discard']} | "
+        f"{v['ref']['leak']} / {v['ref']['discard']} |" for f, v in coarse_rows(N).items())
     find_md = "\n".join(f"| {f['sev']} | {f['title']} | {f['rec']} |" for f in findings(N))
     return f"""# Cloud-mask acceptance audit: OmniCloudMask v4
 
@@ -193,24 +197,26 @@ nobody has measured on the buyer's own terms.
 
 ## What was tested
 
-- **Model:** OmniCloudMask v4 (two U-Nets, red/green/NIR input), fp32 on an RTX 2070 Super.
+- **Model:** OmniCloudMask v4 (two U-Nets, red/green/NIR input), fp32.
 - **Data:** CloudSEN12+ (CC0), expert-labeled test split: **{N['images']} scenes at {N['sites']}
-  sites**, 509 x 509 px at 10 m, both L1C and L2A. Validation split used only to choose
-  operating points.
-- **Training-overlap screen:** OmniCloudMask's published training set lists CloudSEN12 scribble
-  and 2k patches from *all* splits, so the screen was run against its actual training metadata
-  ({N['train_rows']} rows): {N['train_id_hits']} id matches with the evaluation images
-  (including {N['train_cs12_heldout_rows']} test/validation-tagged training rows), {N['train_acq_hits']}
-  same-acquisition matches, and one site (5 images) within 2.6 km of a custom training scene,
-  excluded. Kappaset names only its 110 km tile; excluding all {N['images'] - N['kappa_images']} images on those tiles
-  leaves leak at {N['kappa_leak']} (unchanged).
+  sites**, 509 x 509 px at 10 m, both L1C and L2A. The validation split is used only to choose
+  operating points and the buffer size.
+- **Training-overlap screen:** OmniCloudMask's published training set includes CloudSEN12
+  scribble and 2k patches from *all* splits, so the evaluation scenes were checked against its
+  training records ({N['train_rows']} rows, pinned revision): {N['train_id_hits']} shared scene
+  ids (including {N['train_cs12_heldout_rows']} test/validation-tagged training rows),
+  {N['train_acq_hits']} shared acquisitions, and {N['train_near_images']} evaluation images whose
+  footprint may overlap a custom training scene (conservative disc around its named centre)
+  were removed. Kappaset names only its ~110 km tile; removing the {N['images'] - N['kappa_images']}
+  test images on those tiles gives leak {N['kappa_leak']} (headline {N['leak_rate']}). This is a
+  screen with stated limits, not proof that no overlap remains.
 - **Baselines** (as shipped with CloudSEN12+): Sentinel-2 QA60, Sen2Cor SCL, s2cloudless
   (upstream default post-processing), Cloud Score+, UnetMobV2 and SEnSeI v2. UnetMobV2 was
   trained on CloudSEN12 itself, so it is in-domain like OmniCloudMask.
 - **Metrics, framed as the decision:** *leak* = share of accepted (called clear) pixels that
   are cloud or shadow; *discard* = share of truly clear pixels thrown away; *miss* = share of
-  cloud/shadow pixels accepted. Abstentions count as discarded. Scene policy: keep a scene if
-  its estimated cover is at most 10%.
+  cloud/shadow pixels accepted. Every method is scored on the same pixels; abstentions count as
+  discarded. Scene policy: keep a 5.1 km patch if its estimated cloud+shadow cover is at most 10%.
 - **Statistics:** 95% CIs by bootstrap over sites (5 dates per site are not independent);
   method comparisons are paired.
 
@@ -225,20 +231,22 @@ nobody has measured on the buyer's own terms.
 | SEnSeI v2 | {N['sensei_leak']} | {N['sensei_discard']} | {N['sensei_boa']} |
 | UnetMobV2 v2 (in-domain) | {N['unet2_leak']} | {N['unet2_discard']} | {N['unet2_boa']} |
 | Cloud Score+ (cs >= 0.60) | {N['csp_leak']} | {N['csp_discard']} | {N['csp_boa']} |
-| s2cloudless (defaults) | {N['s2c_leak']} | {N['s2c_discard']} | {N['s2c_boa']} |
+| s2cloudless (upstream defaults) | {N['s2c_leak']} | {N['s2c_discard']} | {N['s2c_boa']} |
 | Sen2Cor SCL | {N['scl_leak']} | {N['scl_discard']} | {N['scl_boa']} |
 | QA60 | {N['qa60_leak']} | {N['qa60_discard']} | {N['qa60_boa']} |
 
-Paired against OmniCloudMask: SEnSeI v2 leaks the same ({N['sensei_d_leak_rate']}
-{N['sensei_d_leak_rate_ci']}) but discards {N['sensei_d_discard_rate']} more; Sen2Cor SCL
-leaks {N['scl_d_leak_rate']} more.
+Paired against OmniCloudMask: SEnSeI v2 leak {N['sensei_d_leak_rate']}
+{N['sensei_d_leak_rate_ci']}, discard {N['sensei_d_discard_rate']}
+{N['sensei_d_discard_rate_ci']}; Sen2Cor SCL leak {N['scl_d_leak_rate']}
+{N['scl_d_leak_rate_ci']}.
 
 ![Leak vs discard](results/figures/tradeoff.png)
 
-**Operating points** (chosen on validation, reported on test): at a 2% leak target
-OmniCloudMask discards {N['ocm_2pct_discard']} {N['ocm_2pct_discard_ci']} of clear pixels,
-Cloud Score+ {N['csp_2pct_discard']}; s2cloudless cannot reach 5% leak at any threshold
-(floor {N['s2c_leak_floor']}; it does not model shadow).
+**Operating points** (chosen on validation, reported on test). For a 2% leak target,
+OmniCloudMask: {N['ocm_2pct_rule']}, giving leak {N['ocm_2pct_leak']} {N['ocm_2pct_leak_ci']}
+and discard {N['ocm_2pct_discard']} {N['ocm_2pct_discard_ci']}; Cloud Score+ discards
+{N['csp_2pct_discard']} at the same target. Thresholding s2cloudless's *raw* probability (no
+averaging or dilation) never gets leak below {N['s2c_leak_floor']}; it has no shadow class.
 
 **Where it fails** (real data):
 
@@ -246,24 +254,33 @@ Cloud Score+ {N['csp_2pct_discard']}; s2cloudless cannot reach 5% leak at any th
 ![By cloud regime](results/figures/regimes.png)
 ![Examples](results/figures/examples.png)
 
-**Stress test (simulated, labeled as such):** change versus the clean run, paired over the
-same scenes; n.s. = 95% CI includes zero.
+**Stress test (simulated):** change versus the clean run, paired over the same scenes;
+n.s. = 95% CI includes zero. Degradations are simple, controlled simulations; they show
+sensitivity to each change, not the behaviour of a particular sensor or pipeline.
+
+![Stress test](results/figures/stress.png)
 
 | Degradation | Effect by severity |
 |---|---|
 {deg_md}
 
-Coarser data, leak / discard against the 10 m expert label (clean 10 m run:
+Coarser data, absolute leak / discard against the 10 m expert label (clean 10 m run:
 {N['leak_rate']} / {N['discard_rate']}). *Native grid*: OCM runs on the coarse pixels.
-*On a 10 m grid*: the same coarse data resampled (bilinear) to 10 m first, as data cubes do.
-*Oracle*: the expert label itself reduced to that grid, the best any mask at that resolution
-could score.
+*10 m grid*: the same coarse data put on a 10 m grid first (bilinear, or nearest-neighbour as a
+control). *Majority-label reference*: the expert label reduced to that grid by 4-class block
+majority, showing what the coarser grid alone changes (a reference, not a bound on these
+metrics).
 
-| Grid | OCM, native grid | OCM, on a 10 m grid | Oracle |
-|---|---|---|---|
-{orc_md}
+| Grid | OCM, native grid | OCM, 10 m grid (bilinear) | OCM, 10 m grid (nearest) | Majority-label reference |
+|---|---|---|---|---|
+{coarse_md}
 
 ## Findings and recommendations
+
+Severity: **High** affects a default decision path with a large error measured on real data;
+**Medium** is a material error in a common condition on real data, a trade-off the client must
+set, or a large simulated effect on a common processing path; **Low** has limited evidence or
+moderate simulated effects; **Info** was checked with small or no measured effect.
 
 | Severity | Finding | Recommendation |
 |---|---|---|
@@ -271,29 +288,32 @@ could score.
 
 ## Limitations
 
-- CloudSEN12+ labels are expert-drawn but not perfect; thin cloud over snow and cloud edges
-  are the least certain, and some measured "leak" there is label disagreement.
-- The test split is cloudier than a typical archive (mean cover ~47%); per-regime results
-  are reported so they can be reweighted to a client's own cloud climatology.
+- CloudSEN12+ labels are expert-drawn but not perfect. Thin cloud over snow and cloud edges are
+  the least certain; some measured leak there may be label disagreement (not adjudicated here).
+- The test split is cloudier than a typical archive (mean cover ~47%); per-regime results are
+  reported so they can be reweighted to a client's own cloud climatology.
 - Only Sentinel-2 is tested. OmniCloudMask claims sensor-agnostic use (Landsat, PlanetScope);
   that claim is not evaluated here.
-- Degradations in the stress test are simulated and simple; they bound sensitivity, they do
-  not reproduce a specific sensor.
+- Scene-filter results are for 5.1 km patches and cloud plus shadow, not full granules.
+- Recommendations for specific conditions (water, cloudy scenes) were not validated separately.
 - QA60 values in CloudSEN12+ appear shifted (16384/32768 instead of bits 10/11); decoding was
   verified against labels, not against a source document.
 
 ## Run it
 
-Requires `uv`, an NVIDIA GPU with 2+ GB (CPU works, slowly) and ~4 GB of disk.
+Requires `uv` and ~4 GB of disk for data plus ~7 GB for the Python environment (PyTorch with
+CUDA). An NVIDIA GPU is used when present (an RTX 2070 Super runs everything in ~1.5 h); the
+scripts fall back to CPU, which is much slower.
 
 ```bash
 uv sync --frozen
-make all          # download, screen, predict, evaluate, stress test, figures, docs (~1.5 h)
+make all          # download, screen, predict, evaluate, stress test, figures, docs
 make test         # unit tests only
 ```
 
-Data are fetched by HTTP range requests from a pinned dataset revision; model weights are
-checked against recorded SHA-256 hashes (`results/provenance.json`).
+Data are read by HTTP range requests from pinned dataset revisions, and the model weights are
+checked against recorded SHA-256 hashes (`results/provenance.json`). The full run log from a
+clean clone is in `results/clean_run.log`.
 
 ## Licenses
 
@@ -308,7 +328,8 @@ checked against recorded SHA-256 hashes (`results/provenance.json`).
 | OmniCloudMask training metadata (filenames only) | CC BY 4.0 | huggingface.co/datasets/NickWright/OmniCloudMask-Combined-Training-Dataset |
 | Inter typeface (report and figures) | SIL OFL 1.1 | github.com/rsms/inter |
 
-Python dependencies and their versions are pinned in `uv.lock`.
+CloudSEN12+ also ships a Copernicus DEM layer; this audit does not download or use it. Python
+dependencies and their versions are pinned in `uv.lock`.
 
 ---
 Built {TODAY} by Shane Cairns. Generated by `scripts/build_docs.py`.
@@ -319,6 +340,8 @@ Built {TODAY} by Shane Cairns. Generated by `scripts/build_docs.py`.
 # Site write-up
 # --------------------------------------------------------------------------------------------
 def writeup(N: dict) -> str:
+    f30 = P(N, "Coarse data on a 10 m grid", 3)
+    n30 = P(N, "Coarser resolution", 3)
     return f"""---
 title: "Is this cloud mask safe to automate on?"
 summary: "An independent acceptance audit of an open cloud-masking model, framed around the decision a pipeline actually makes."
@@ -333,29 +356,31 @@ for. Most teams take that decision from a mask they have never measured on their
 
 ## What I built
 
-An audit harness that answers the buyer's question for
+An audit pipeline that answers the buyer's question for
 [OmniCloudMask](https://github.com/DPIRD-DMA/OmniCloudMask), a popular open model, on
 {N['images']} expert-labeled Sentinel-2 scenes from {N['sites']} sites (CloudSEN12+):
 
 - metrics phrased as the decision: **leak** (cloud in the pixels you accept) and **discard**
-  (clear ground you throw away), plus a scene filter test;
-- a check of the model's own published training data against the test set, so the scores
-  are not inflated by overlap;
+  (clear ground you throw away), plus a scene-filter test;
+- a screen of the model's own published training records against the test scenes, removing
+  anything that might overlap;
 - side-by-side comparison with the masks that ship with Sentinel-2 products;
-- failure analysis on real scenes, a simulated stress test, and mitigations that were
-  chosen on one split and verified on another.
+- failure analysis on real scenes, a simulated stress test, and settings chosen on one data
+  split and checked on another.
 
 ## Results
 
 - At its default setting, **{N['leak_rate']}** of accepted pixels are cloud or shadow and
-  **{N['discard_rate']}** of clear pixels are discarded. One setting change, chosen on held-out
-  data, brings leak to **{N['ocm_2pct_leak']}** at {N['ocm_2pct_discard']} discard; a common
-  alternative, buffering the mask, cannot get below {N['buffer_kmax_leak']}.
-- The cloud classification shipped inside Sentinel-2 L2A products is far less safe for
-  scene filtering: **{N['gate_scl_over']}** of scenes it lets through a "10% cloud" filter are
+  **{N['discard_rate']}** of clear pixels are discarded. A threshold chosen on held-out data
+  brings leak to **{N['ocm_2pct_leak']}** at {N['ocm_2pct_discard']} discard; buffering the mask,
+  a common alternative, did not reach that leak at any tested size.
+- The cloud classification shipped in Sentinel-2 L2A products is much less reliable for scene
+  filtering: of the patches it keeps under a "10% cloud" rule, **{N['gate_scl_over']}** are
   cloudier than that, against {N['gate_ocm_over']} with OmniCloudMask.
-- It is weakest over water (leak {N['water_leak']}) and in mostly clear scenes, where it
-  misses {N['light_miss']} of the cloud and shadow present.
+- Leak is higher over water ({N['water_leak']}) and over snow and ice (on thinner evidence), and
+  in mostly clear scenes it misses {N['light_miss']} of the cloud and shadow present.
+- In a simulation, 30 m data placed on a 10 m grid before masking lost {f30['discard']} of clear
+  ground, against {n30['discard']} when masked on its own grid.
 
 ![Leak vs discard](/images/cloudmask/tradeoff.png)
 
@@ -363,9 +388,9 @@ An audit harness that answers the buyer's question for
 
 If you are about to automate on a model you did not build, the useful question is not "how
 accurate is it?" but "what will it let through, what will it cost me, and which setting should
-I run?" This audit answers that in a week on public data and a single GPU, with confidence
-intervals, a ranked list of findings and recommendations that were tested, not just
-suggested. The same harness runs on your model and your imagery.
+I run?" This audit answers that on public data and a single GPU, with confidence intervals, a
+ranked list of findings, and settings that were chosen on one split and verified on another.
+The same approach can be adapted to your model and your imagery.
 """
 
 
@@ -406,19 +431,19 @@ def report_html(N: dict) -> str:
         f"<tr><td>F{i + 1}</td><td class='sev sev-{f['sev']}'>{f['sev']}</td><td><b>{f['title']}</b>"
         f"<br>{f['evidence']}</td><td>{f['rec']}</td></tr>" for i, f in enumerate(F))
     recs = [f for f in F if f["sev"] in ("High", "Medium")]
+    f30, n30 = P(N, "Coarse data on a 10 m grid", 3), P(N, "Coarser resolution", 3)
+    c03 = P(N, "Clip only (16-bit)", 0.3)
     summary = (
-        f"<li><b>Use it, with a setting change.</b> OmniCloudMask is the most accurate mask tested "
-        f"(balanced accuracy {N['boa']}); it leaks {N['leak_rate']} of accepted pixels by default "
-        f"and {N['ocm_2pct_leak']} at the recommended threshold.</li>"
-        f"<li><b>Stop filtering scenes with the SCL band.</b> {N['gate_scl_over']} of scenes it keeps "
-        f"under a 10% cloud rule are cloudier than that.</li>"
-        f"<li><b>Expect more leak over water</b> ({N['water_leak']}) and missed cloud in "
-        f"mostly clear scenes ({N['light_miss']} of it).</li>"
-        f"<li><b>Feed it native-grid, unclipped data.</b> 30 m imagery resampled to 10 m "
-        f"discards {N['fine30_discard']} of clear ground (native grid: {N['native30_discard']}); "
-        f"inputs clipped at 0.3 reflectance leak {N['clip03_leak']}.</li>"
-        f"<li><b>Not sensitive to</b> processing level (L1C/L2A), per-band calibration drift or "
-        f"NIR misregistration up to 4 px.</li>")
+        f"<li><b>Usable, with a setting change.</b> OmniCloudMask had the highest balanced accuracy "
+        f"of the masks tested at their default settings ({N['boa']}); it leaks {N['leak_rate']} of "
+        f"accepted pixels by default and {N['ocm_2pct_leak']} at the recommended threshold.</li>"
+        f"<li><b>Do not filter scenes with the SCL band.</b> Of the patches it keeps under a 10% "
+        f"cloud rule, {N['gate_scl_over']} are cloudier than that.</li>"
+        f"<li><b>Expect more leak over water</b> ({N['water_leak']}) and missed cloud in mostly "
+        f"clear scenes ({N['light_miss']} of it).</li>"
+        f"<li><b>Mask native-grid, unclipped data where possible.</b> In simulation, 30 m data put on "
+        f"a 10 m grid discards {f30['discard']} of clear ground (native grid: {n30['discard']}); "
+        f"reflectance clipped at 0.3 raises leak by {c03['dleak']}.</li>")
     return f"""<!doctype html><html><head><meta charset="utf-8"><style>{CSS}</style></head><body>
 <h1>Cloud-mask acceptance audit</h1>
 <div class="meta">OmniCloudMask v4 on Sentinel-2 · Independent model assurance report · {TODAY}<br>
@@ -438,18 +463,21 @@ was used only to choose operating points.</p>
 <p><b>Independence from training data.</b> The model's published training set includes
 CloudSEN12 material from every split, so its {N['train_rows']} training records were checked
 directly against the test scenes: no shared scene ids (including {N['train_cs12_heldout_rows']}
-test/validation-tagged training records), no shared acquisitions; one site within 2.6 km of a
-custom training scene was removed. Removing every scene on a Kappaset training tile leaves the
-headline unchanged (leak {N['kappa_leak']}).</p>
+test/validation-tagged training records), no shared acquisitions; {N['train_near_images']} scenes
+that may overlap a custom training scene were removed. Removing every scene on a Kappaset training
+tile gives leak {N['kappa_leak']} (headline {N['leak_rate']}). This screen has limits; it does not
+prove that no overlap remains.</p>
 <p><b>Comparators.</b> Sentinel-2 QA60 and Sen2Cor SCL (shipped with the products), s2cloudless
 (upstream defaults), Cloud Score+ (cs &ge; 0.60), UnetMobV2 and SEnSeI v2.</p>
 <p><b>Metrics.</b> <i>Leak</i>: share of accepted pixels that are cloud or shadow.
 <i>Discard</i>: share of clear pixels rejected. <i>Miss</i>: share of cloud/shadow accepted.
-Scene filter: keep if estimated cover &le; 10%. Abstentions count as rejected. 95% confidence
-intervals by bootstrap over sites; comparisons are paired.</p>
-<p><b>Severity.</b> High: affects a default decision path with large error. Medium: material
-error in a common condition, or a trade-off the client must set. Low: limited evidence or only
-under degraded input. Info: checked, no action.</p>
+Scene filter: keep a 5.1 km patch if estimated cloud+shadow cover &le; 10%. All methods are
+scored on the same pixels; abstentions count as rejected. 95% confidence intervals by bootstrap
+over sites; comparisons are paired.</p>
+<p><b>Severity.</b> High: affects a default decision path, large error, measured on real data.
+Medium: material error in a common condition on real data, a trade-off the client must set, or a
+large simulated effect on a common processing path. Low: limited evidence or moderate simulated
+effects. Info: checked, small or no measured effect.</p>
 
 <h2>Findings, ranked by severity</h2>
 <table><tr><th>#</th><th>Severity</th><th>Finding and evidence</th><th>Recommendation</th></tr>{rows}</table>
@@ -461,19 +489,22 @@ points are fixed-rule products. Test split.</p>
 <img src="../results/figures/stress.png">
 <p class="small">Figure 2. Stress test (simulated degradations): change in leak and discard against the clean
 run on the same scenes, with 95% site-bootstrap CIs. "Coarse data on a 10 m grid" is 20/30/50 m data
-resampled to 10 m before masking; "Coarser resolution" is the same data masked on its native grid.</p>
+put on a 10 m grid before masking (bilinear; nearest-neighbour as a control); "Coarser resolution" is the
+same data masked on its native grid.</p>
 
 <h2>Recommendations</h2>
 <ol>{''.join(f"<li>{f['action']}</li>" for f in recs if f.get('action'))}</ol>
 
 <h2>Limitations</h2>
 <ul>
-<li>Expert labels are least certain for thin cloud over snow and at cloud edges; part of the
-measured leak there is label disagreement.</li>
+<li>Expert labels are least certain for thin cloud over snow and at cloud edges; some measured
+leak there may be label disagreement (not adjudicated).</li>
 <li>The test split is cloudier than a typical archive; per-regime results allow reweighting
 to a client's own cloud climatology.</li>
 <li>Sentinel-2 only; the model's sensor-agnostic claim was not tested. Degradations are simple
-simulations that bound sensitivity.</li>
+controlled simulations, not models of a particular sensor or pipeline.</li>
+<li>Scene-filter results are for 5.1 km patches, not full granules. Condition-specific
+recommendations were not validated separately.</li>
 </ul>
 <p class="small">Reproducibility: pinned dataset revision, model weights verified by SHA-256,
 one-command pipeline (<code>make all</code>), unit tests. Data: CloudSEN12+ (CC0); contains modified

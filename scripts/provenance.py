@@ -25,10 +25,21 @@ def sha256(path: Path) -> str:
 def main() -> None:
     out = {"packages": {p: version(p) for p in ["omnicloudmask", "torch", "tacoreader",
                                                     "segmentation-models-pytorch", "timm"]}}
+    # Revisions the pipeline actually reads (pinned in code), plus the remote HEAD for reference.
+    import sys
+
+    sys.path.insert(0, "scripts")
+    from screen_ocm_training import REVISION as TRAIN_REVISION
+
+    from cmaudit.meta import REVISION as DATA_REVISION
+
+    pinned = {"tacofoundation/cloudsen12": DATA_REVISION,
+              "NickWright/OmniCloudMask-Combined-Training-Dataset": TRAIN_REVISION,
+              "NickWright/OmniCloudMask": "not pinned by revision; weights verified by sha256 below"}
     for kind, repos in (("datasets", DATASETS), ("models", MODELS)):
         for repo in repos:
             r = requests.get(f"https://huggingface.co/api/{kind}/{repo}", timeout=60).json()
-            out[repo] = {"revision": r.get("sha"), "last_modified": r.get("lastModified")}
+            out[repo] = {"revision_used": pinned[repo], "remote_head_at_build": r.get("sha")}
     out["ocm_weights_sha256"] = {p.name: sha256(p) for p in sorted(Path("models/ocm").glob("*.safetensors"))}
     out["ocm_model_version"] = 4.0
     out["cloudsen12_dataset_version"] = "1.1.2 (per dataset card)"

@@ -12,7 +12,7 @@ from cmaudit import figstyle as fs
 CURVES = {
     "OmniCloudMask v4 | l1c": ("OmniCloudMask v4", fs.SERIES[0]),
     "Cloud Score+ cs | product": ("Cloud Score+ (cs)", fs.SERIES[1]),
-    "s2cloudless | product": ("s2cloudless", fs.SERIES[2]),
+    "s2cloudless raw probability | product": ("s2cloudless (raw probability)", fs.SERIES[2]),
 }
 POINTS = {
     "Sen2Cor SCL (L2A) | product": "Sen2Cor SCL",
@@ -135,6 +135,8 @@ SEV_LABEL = {
     "Optical blur": lambda v: f"{v:g} px",
     "Coarser resolution": lambda v: f"{int(v) * 10} m",
     "Coarse data on a 10 m grid": lambda v: f"{int(v) * 10} m",
+    "Coarse data on a 10 m grid (nearest)": lambda v: f"{int(v) * 10} m",
+    "Clip only (16-bit)": lambda v: f"clip {v:g}",
     "NIR misregistration": lambda v: f"{int(v)} px",
     "8-bit JPEG delivery": lambda v: f"q{int(v)}",
     "8-bit lossless (clip level)": lambda v: f"clip {v:g}",
@@ -143,11 +145,11 @@ SEV_LABEL = {
 
 def stress() -> None:
     t = pd.read_csv("results/perturbations_test.csv")
-    t = t[~t["perturbation"].str.startswith("Oracle")]
+    t = t[~t["perturbation"].str.startswith("Majority-label")]
     names = list(dict.fromkeys(t["perturbation"]))
-    cols = 4
+    cols = 3
     rows = -(-len(names) // cols)
-    fig, axes = plt.subplots(rows, cols, figsize=(9.6, 2.5 * rows), sharey=True)
+    fig, axes = plt.subplots(rows, cols, figsize=(9.0, 2.4 * rows), sharey=True)
     axes = axes.ravel()
     lo = min(t["d_leak_rate_lo"].min(), t["d_discard_rate_lo"].min())
     hi = max(t["d_leak_rate_hi"].max(), t["d_discard_rate_hi"].max())

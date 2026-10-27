@@ -70,14 +70,15 @@ def load() -> dict:
     def opv(method, rule):
         return op[(op["method"] == method) & op["rule"].str.startswith(rule)].iloc[0]
     r = opv("OmniCloudMask v4 | l1c", "leak <= 2%")
-    N["ocm_2pct_threshold"] = f"{r['threshold_native']:.2f}"
+    N["ocm_2pct_threshold"] = f"{r['threshold_native']:.3f}"
+    N["ocm_2pct_rule"] = r["rule_native"]
     N["ocm_2pct_leak"], N["ocm_2pct_leak_ci"] = pct(r["test_leak"]), ci(r["test_leak_lo"], r["test_leak_hi"])
     N["ocm_2pct_discard"] = pct(r["test_discard"])
     N["ocm_2pct_discard_ci"] = ci(r["test_discard_lo"], r["test_discard_hi"])
     N["csp_2pct_discard"] = pct(opv("Cloud Score+ cs | product", "leak <= 2%")["test_discard"], 0)
-    N["s2c_2pct_achievable"] = bool(opv("s2cloudless | product", "leak <= 5%")["achievable"])
+    N["s2c_2pct_achievable"] = bool(opv("s2cloudless raw probability | product", "leak <= 5%")["achievable"])
     cv = pd.read_csv(R / "curves_test.csv")
-    N["s2c_leak_floor"] = pct(cv[cv["method"] == "s2cloudless | product"]["leak_rate"].min())
+    N["s2c_leak_floor"] = pct(cv[cv["method"] == "s2cloudless raw probability | product"]["leak_rate"].min())
 
     lc = pd.read_csv(R / "subgroups_landcover.csv")
     lc = lc[lc["method"] == "OmniCloudMask v4"].set_index("group")
@@ -111,7 +112,7 @@ def load() -> dict:
     N["train_cs12_heldout_rows"] = f"{tags.get('test', 0) + tags.get('validation', 0):,}"
     N["train_id_hits"] = len(scr["cloudsen12_ids_matching_eval_images"])
     N["train_acq_hits"] = len(scr["non_cloudsen12_same_tile_and_date_as_eval"])
-    N["train_near_images"] = len(scr["eval_images_within_2.6km_of_ocm_custom_scene_centre"])
+    N["train_near_images"] = len(scr["eval_images_possibly_overlapping_ocm_custom_scene"])
 
     if (R / "mitigation_buffer.csv").exists():
         b = pd.read_csv(R / "mitigation_buffer.csv").set_index("k_px")
@@ -132,31 +133,15 @@ def load() -> dict:
     if (R / "perturbations_test.csv").exists():
         t = pd.read_csv(R / "perturbations_test.csv")
         N["perturb"] = t
-
-        def d(name: str, sev: float, stat: str) -> float:
-            row = t[(t["perturbation"] == name) & (t["severity"].round(3) == round(sev, 3))]
-            return float(row.iloc[0][f"d_{stat}"])
-
-        for key, name, sev in (("fine30", "Coarse data on a 10 m grid", 3),
-                               ("fine20", "Coarse data on a 10 m grid", 2),
-                               ("native30", "Coarser resolution", 3),
-                               ("native20", "Coarser resolution", 2),
-                               ("clip03", "8-bit lossless (clip level)", 0.3),
-                               ("clip06", "8-bit lossless (clip level)", 0.6),
-                               ("clip10", "8-bit lossless (clip level)", 1.0),
-                               ("jpeg95", "8-bit JPEG delivery", 95),
-                               ("jpeg50", "8-bit JPEG delivery", 50),
-                               ("noise005", "Sensor noise", 0.005),
-                               ("noise01", "Sensor noise", 0.01),
-                               ("blur1", "Optical blur", 1.0),
-                               ("mis4", "NIR misregistration", 4)):
-            dl, dd = d(name, sev, "leak_rate"), d(name, sev, "discard_rate")
-            N[f"{key}_dleak"], N[f"{key}_ddiscard"] = pp(dl), pp(dd)
-            N[f"{key}_leak"], N[f"{key}_discard"] = pct(N["_leak"] + dl), pct(N["_discard"] + dd)
-        N["jpeg95_extra"] = pp(d("8-bit JPEG delivery", 95, "leak_rate")
-                               - d("8-bit lossless (clip level)", 0.6, "leak_rate"))
-        N["jpeg50_extra"] = pp(d("8-bit JPEG delivery", 50, "leak_rate")
-                               - d("8-bit lossless (clip level)", 0.6, "leak_rate"))
-        mis = t[t["perturbation"] == "NIR misregistration"]
-        N["mis_max_abs"] = pp(float(mis[["d_leak_rate", "d_discard_rate"]].abs().max().max()))
+        pt = {}
+        for _, r in t.iterrows():
+            d = {}
+            for stat, short in (("leak_rate", "leak"), ("discard_rate", "discard")):
+                v, lo, hi = r[f"d_{stat}"], r[f"d_{stat}_lo"], r[f"d_{stat}_hi"]
+                base = N["_leak"] if short == "leak" else N["_discard"]
+                d[f"d{short}"], d[f"d{short}_ci"] = pp(v), ci(lo, hi)
+                d[short] = pct(base + v)
+                d[f"_d{short}"], d[f"_d{short}_hi"] = float(v), float(hi)
+            pt[(r["perturbation"], round(float(r["severity"]), 3))] = d
+        N["pt"] = pt
     return N

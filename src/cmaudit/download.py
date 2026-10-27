@@ -10,7 +10,7 @@ Each sample is stored as ``data/samples/<level>/<tortilla:id>.npz`` with:
 - ``bands``: uint16 (4, 512, 512) = B02, B03, B04, B8A (blue, green, red, NIR narrow)
 - ``label``: uint8 (512, 512) expert label (0 clear, 1 thick, 2 thin, 3 shadow)
 and ``data/samples/extra/<tortilla:id>.npz`` with the operational baseline masks, ESA
-WorldCover and elevation, each (512, 512).
+WorldCover, each (512, 512).
 """
 
 from __future__ import annotations
@@ -33,8 +33,9 @@ from tqdm import tqdm
 BAND_INDEX = {"B02": 2, "B03": 3, "B04": 4, "B8A": 9}
 BANDS = list(BAND_INDEX)
 
+# Copernicus DEM ("elevation") is not used by the audit and is not retained.
 EXTRA_LAYERS = [
-    "elevation", "lc10", "cloudmask_qa60", "cloudmask_sen2cor", "cloudmask_s2cloudless",
+    "lc10", "cloudmask_qa60", "cloudmask_sen2cor", "cloudmask_s2cloudless",
     "cloudmask_cloudscore_cs_v1", "cloudmask_cloudscore_cs_cdf_v1", "cloudmask_unetmobv2_v1",
     "cloudmask_unetmobv2_v2", "cloudmask_sensei_v2",
 ]

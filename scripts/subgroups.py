@@ -17,9 +17,9 @@ import pandas as pd
 from tqdm import tqdm
 
 from cmaudit.baselines import BASELINES
-from cmaudit.evaluate import ocm_pred, stack_cms
+from cmaudit.evaluate import ocm_pred, operational, stack_cms
 from cmaudit.metrics import confusion, pixel_summary, summarize
-from cmaudit.samples import load, manifest, valid_mask
+from cmaudit.samples import load, manifest, support
 
 WORLDCOVER = {10: "Tree cover", 20: "Shrubland", 30: "Grassland", 40: "Cropland",
               50: "Built-up", 60: "Bare / sparse", 70: "Snow and ice", 80: "Water",
@@ -37,7 +37,7 @@ def landcover_cms(man: pd.DataFrame) -> pd.DataFrame:
                          mininterval=10):
         lv = load("l1c", tid)
         ex = load("extra", tid)
-        valid = valid_mask(lv["bands"])
+        valid = support(tid)  # common support, as in the headline scoring
         lc = ex["lc10"]
         preds = {"OmniCloudMask v4": ocm_pred("l1c", tid)}
         for name in METHODS[1:]:
@@ -50,7 +50,7 @@ def landcover_cms(man: pd.DataFrame) -> pd.DataFrame:
             for name, p in preds.items():
                 rows.append({"tortilla:id": tid, "roi_id": roi, "method": name,
                              "landcover": WORLDCOVER[int(code)],
-                             "cm": confusion(lv["label"], p, m).ravel()})
+                             "cm": confusion(lv["label"], operational(p), m).ravel()})
     df = pd.DataFrame(rows)
     df.to_parquet(path)
     return df

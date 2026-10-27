@@ -19,13 +19,17 @@ MODEL_DIR = Path("models/ocm")
 OCM_BANDS = [2, 1, 3]  # -> B04 red, B03 green, B8A NIR
 
 
-def load_models(device: str = "cuda", dtype: torch.dtype = torch.float16) -> list:
+def default_device() -> str:
+    return "cuda" if torch.cuda.is_available() else "cpu"
+
+
+def load_models(device: str | None = None, dtype: torch.dtype = torch.float16) -> list:
     from omnicloudmask.cloud_mask import collect_models
 
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     return collect_models(
         custom_models=None,
-        inference_device=torch.device(device),
+        inference_device=torch.device(device or default_device()),
         inference_dtype=dtype,
         source="hugging_face",
         destination_model_dir=MODEL_DIR,
@@ -36,7 +40,7 @@ def load_models(device: str = "cuda", dtype: torch.dtype = torch.float16) -> lis
 def predict_probs(
     models: list,
     images: list[np.ndarray],
-    device: str = "cuda",
+    device: str | None = None,
     dtype: torch.dtype = torch.float16,
     batch_size: int = 8,
 ) -> np.ndarray:
@@ -46,7 +50,7 @@ def predict_probs(
     out = predict_from_batch(
         images,
         batch_size=batch_size,
-        inference_device=device,
+        inference_device=device or default_device(),
         inference_dtype=dtype,
         export_confidence=True,
         softmax_output=True,

@@ -16,7 +16,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from cmaudit.evaluate import PRED_DIR
-from cmaudit.samples import load, manifest, valid_mask
+from cmaudit.samples import load, manifest, support
 from cmaudit.sweep import curve, pick_threshold, score_hist
 
 OUT = Path("data/results")
@@ -25,12 +25,26 @@ OUT = Path("data/results")
 METHODS = {
     "OmniCloudMask v4 | l1c": 256,
     "OmniCloudMask v4 | l2a": 256,
-    "s2cloudless | product": 101,
+    "s2cloudless raw probability | product": 101,
     "Cloud Score+ cs | product": 1001,
     "Cloud Score+ cs_cdf | product": 1001,
 }
 # Native scale of the clear score, for reporting thresholds in the product's own units.
 TO_NATIVE = {256: 1 / 255, 101: 1 / 100, 1001: 1 / 1000}
+
+
+def native_rule(method: str, t: int) -> tuple[float, str]:
+    """The executable acceptance rule, in the product's own units, that is exactly equivalent to
+    "integer clear score >= t" on the stored data (no rounding gap between evaluated and
+    documented thresholds)."""
+    if method.startswith("OmniCloudMask"):
+        thr = (t - 0.5) / 255  # stored score = rint(255 * P(clear))
+        return thr, f"accept if P(clear) >= {thr:.4f}"
+    if method.startswith("s2cloudless"):
+        p = (100 - t) / 100  # clear score = 100 - integer cloud probability (percent)
+        return p, f"accept if raw cloud probability <= {p:.2f} (no averaging/dilation)"
+    thr = (10 * t - 5) / 10000  # bin = rint(cs * 10000 / 10)
+    return thr, f"accept if score >= {thr:.4f}"
 OPERATING_POINTS = [("leak", 0.02), ("leak", 0.05), ("discard", 0.02), ("discard", 0.05)]
 N_BOOT = 1000
 
@@ -41,10 +55,12 @@ def clear_scores(tid: str) -> dict[str, np.ndarray]:
     for level in ("l1c", "l2a"):
         with np.load(PRED_DIR / level / f"{tid}.npz") as z:
             out[f"OmniCloudMask v4 | {level}"] = z["probs"][0].astype(np.int64)
-    out["s2cloudless | product"] = 100 - ex["cloudmask_s2cloudless"].astype(np.int64)
+    out["s2cloudless raw probability | product"] = 100 - ex["cloudmask_s2cloudless"].astype(np.int64)
     for k, layer in (("cs", "cloudmask_cloudscore_cs_v1"), ("cs_cdf", "cloudmask_cloudscore_cs_cdf_v1")):
         v = ex[layer].astype(np.int64)
-        out[f"Cloud Score+ {k} | product"] = np.where(v <= 10000, np.rint(v / 10).astype(np.int64), -1)
+        # out-of-range values are abstentions: bin 0, i.e. rejected at every threshold t >= 1
+        # (the operational policy used everywhere else)
+        out[f"Cloud Score+ {k} | product"] = np.where(v <= 10000, np.rint(v / 10).astype(np.int64), 0)
     return out
 
 
@@ -57,7 +73,7 @@ def build_hists(split: str) -> tuple[dict[str, np.ndarray], np.ndarray]:
     hists = {k: [] for k in METHODS}
     for tid in tqdm(man["tortilla:id"], desc=f"hists {split}", mininterval=10):
         lv = load("l1c", tid)
-        valid = valid_mask(lv["bands"])
+        valid = support(tid)  # common support, as in the headline scoring
         scores = clear_scores(tid)
         for k, nb in METHODS.items():
             hists[k].append(score_hist(lv["label"], scores[k], valid, nb))
@@ -96,7 +112,8 @@ def main() -> None:
             rows.append({
                 "method": k, "rule": f"{target} <= {limit:.0%} (chosen on validation)",
                 "achievable": reachable,
-                "threshold_native": round(t * TO_NATIVE[nb], 4),
+                "threshold_native": native_rule(k, t)[0],
+                "rule_native": native_rule(k, t)[1],
                 "val_leak": cv["leak_rate"][t], "val_discard": cv["discard_rate"][t],
                 "test_leak": b["leak_rate"][0], "test_leak_lo": b["leak_rate"][1],
                 "test_leak_hi": b["leak_rate"][2],

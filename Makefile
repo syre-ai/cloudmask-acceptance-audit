@@ -1,11 +1,11 @@
-# One command for the whole audit: `make all` (about 1.5 h on an RTX 2070 Super, ~4 GB of data).
+# One command for the whole audit: `make all` (about 1.5-2 h on an RTX 2070 Super, ~4 GB of data).
 # Each step is idempotent and caches under data/; `make clean-results` forces a re-score.
 
 PY := uv run python
 
-.PHONY: all env test data screen predict evaluate sweep subgroups sensitivity perturb mitigate figures docs clean-results
+.PHONY: all env test data inspect screen predict evaluate sweep subgroups sensitivity perturb mitigate figures docs clean-results
 
-all: env test data screen predict evaluate sweep subgroups sensitivity perturb mitigate figures docs
+all: env test data inspect screen predict evaluate sweep subgroups sensitivity perturb mitigate figures docs
 
 env:
 	uv sync --frozen
@@ -15,6 +15,9 @@ test:
 
 data:            ## CloudSEN12+ test/validation samples (range requests), OCM v4 weights (sha256-checked)
 	$(PY) scripts/download_data.py
+
+inspect:         ## decode-check of the baseline mask layers against expert labels
+	$(PY) scripts/inspect_baselines.py
 
 screen:          ## check OCM's published training metadata against the evaluation images
 	$(PY) scripts/screen_ocm_training.py

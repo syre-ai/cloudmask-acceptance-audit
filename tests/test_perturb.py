@@ -11,8 +11,10 @@ def _img(seed=0):
     return img
 
 
-@pytest.mark.parametrize("name", [n for n in SUITE if n not in ("Coarser resolution",
-                                                                 "Coarse data on a 10 m grid")])
+SMALL_OK = [n for n in SUITE if not n.startswith(("Coarser", "Coarse data"))]
+
+
+@pytest.mark.parametrize("name", SMALL_OK)
 def test_suite_preserves_shape_dtype_and_nodata(name):
     fn, kw, sevs, _ = SUITE[name]
     img = _img()
@@ -73,7 +75,7 @@ def test_buffer_grows_cloud_not_abstention():
     assert np.array_equal(buffered(pred, 0), pred)
 
 
-def test_resampled_to_fine_shape_and_smoothness():
+def test_resampled_to_fine_smoothness():
     from cmaudit.perturb import resampled_to_fine
 
     rng = np.random.default_rng(0)
@@ -92,3 +94,45 @@ def test_quantize8_clips_bright_values():
     img = np.array([[[1000, 3000, 9000]]], np.uint16).repeat(3, 0)
     out = quantize8(img, 0.3)
     assert out[0, 0, 2] == 3000 and abs(int(out[0, 0, 0]) - 1000) <= 6
+
+
+def test_per_band_missing_values_preserved():
+    from cmaudit.perturb import blur
+
+    img = _img()
+    img[2, 10, 10] = 0  # one band missing at one pixel
+    for name in SMALL_OK:
+        fn, kw, sevs, _ = SUITE[name]
+        out = fn(img, **{kw: sevs[-1]})
+        assert out[2, 10, 10] == 0 and out[0, 10, 10] > 0, name
+    assert blur(img, 1.0)[2, 10, 10] == 0
+
+
+def test_blur_does_not_bleed_nodata():
+    from cmaudit.perturb import blur
+
+    img = np.full((3, 64, 64), 1000, np.uint16)
+    img[:, -3:, :] = 0
+    out = blur(img, 2.0)
+    assert (out[:, :-3, :] == 1000).all()  # constant valid area stays constant at the edge
+
+
+def test_coarse_on_fine_grid_controls():
+    from cmaudit.perturb import resampled_to_fine, resampled_to_fine_nearest
+
+    rng = np.random.default_rng(1)
+    img = rng.integers(100, 4000, (3, 512, 512)).astype(np.uint16)
+    img[:, 509:, :] = 0
+    img[:, :, 509:] = 0
+    for fn in (resampled_to_fine, resampled_to_fine_nearest):
+        out = fn(img, 3)
+        assert out.shape == img.shape and (out[:, 509:, :] == 0).all() and (out[:, :509, :509] > 0).all()
+    near = resampled_to_fine_nearest(img, 3)
+    assert near[0, 0, 0] == near[0, 2, 2]  # blocky
+
+
+def test_jpeg_uses_same_rounding_as_lossless():
+    from cmaudit.perturb import jpeg, quantize8
+
+    img = np.full((3, 64, 64), 2345, np.uint16)  # flat image: JPEG at q100 is exact
+    assert np.array_equal(jpeg(img, 100), quantize8(img, 0.6))

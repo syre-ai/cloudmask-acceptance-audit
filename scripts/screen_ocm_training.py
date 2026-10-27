@@ -9,7 +9,9 @@ Checks:
    scribble) shares a Sentinel-2 tile and sensing date with an evaluation image.
 
 3. Location: OCM custom scenes (hard negative, scribble) name their centre lat/lon; any
-   evaluation image within 2.6 km is excluded (tier "same_location"). Kappaset names only its
+   evaluation image whose footprint touches a conservative disc around such a scene (radius:
+   half-diagonal plus coordinate rounding, true ground distance) is excluded (tier
+   "same_location"). Kappaset names only its
    MGRS tile (~110 km), so images on a Kappaset tile are flagged for a sensitivity check.
 
 Writes data/ocm_training_meta.parquet, data/extra_overlap_flags.parquet and
@@ -32,8 +34,10 @@ import requests
 from cmaudit.samples import manifest
 
 REPO = "NickWright/OmniCloudMask-Combined-Training-Dataset"
-API = f"https://huggingface.co/api/datasets/{REPO}/tree/main/data"
-BASE = f"https://huggingface.co/datasets/{REPO}/resolve/main/data/"
+# Pinned revision (the v4 training set as published 2026-03-05), so a rerun reads the same rows.
+REVISION = "cf7f958be9954301848d6d08fdb420292134b0a9"
+API = f"https://huggingface.co/api/datasets/{REPO}/tree/{REVISION}/data"
+BASE = f"https://huggingface.co/datasets/{REPO}/resolve/{REVISION}/data/"
 COLS = ["subset", "processing_level", "image_filename", "label_filename"]
 OUT = Path("data/ocm_training_meta.parquet")
 
@@ -93,18 +97,27 @@ def main() -> None:
     parsed = other["tile_date"].notna()
     same_acq = other[parsed & other["tile_date"].isin(ev_td)]
 
-    # Location (any date). OCM custom scenes name their centre lat/lon; a 509 px patch spans
-    # ~5.1 km, so a centre inside an evaluation footprint buffered by 2.6 km can overlap it.
+    # Location (any date). OCM custom scenes name their centre lat/lon (rounded to 0.01 deg)
+    # and span 509 px x 10 m = 5.09 km. A disc of radius half-diagonal (3.6 km) plus the
+    # rounding error (~0.8 km), built in a local azimuthal-equidistant projection so the radius
+    # is true ground distance at any latitude, contains the whole scene; any evaluation footprint
+    # it touches may overlap. Conservative: some flagged pairs will not actually overlap.
+    from pyproj import CRS, Transformer
     from shapely.geometry import Point
+    from shapely.ops import transform as shp_transform
 
     from cmaudit.meta import with_footprints
 
     fp = with_footprints(ev)
     ll = other["image_filename"].str.extract(r"_(-?\d+\.\d+)_(-?\d+\.\d+)_image").astype(float)
-    pts = [Point(lon, lat) for lat, lon in ll.dropna().to_numpy()]
-    buffered = fp.to_crs(3857).buffer(2600).to_crs(4326)
-    near = sorted({fp["tortilla:id"].iloc[i] for p in pts
-                   for i in buffered.sindex.query(p, predicate="intersects")})
+    radius = 5090 / 2 * 2**0.5 + 800
+    discs = []
+    for lat, lon in ll.dropna().to_numpy():
+        aeqd = CRS.from_proj4(f"+proj=aeqd +lat_0={lat} +lon_0={lon} +datum=WGS84 +units=m")
+        back = Transformer.from_crs(aeqd, "EPSG:4326", always_xy=True).transform
+        discs.append(shp_transform(back, Point(0, 0).buffer(radius, 64)))
+    near = sorted({fp["tortilla:id"].iloc[i] for d in discs
+                   for i in fp.sindex.query(d, predicate="intersects")})
     kappa_tiles = {td[0] for td in other.loc[other["subset"] == "Kappaset", "tile_date"]}
     ev_tiles = ev["s2_id"].map(lambda x: x.split("_")[5][1:])
 
@@ -119,8 +132,8 @@ def main() -> None:
         "non_cloudsen12_rows_with_tile_and_date": int(parsed.sum()),
         "non_cloudsen12_same_tile_and_date_as_eval": sorted(
             same_acq["image_filename"].unique().tolist()),
-        "ocm_custom_scenes_with_latlon": len(pts),
-        "eval_images_within_2.6km_of_ocm_custom_scene_centre": near,
+        "ocm_custom_scenes_with_latlon": len(discs),
+        "eval_images_possibly_overlapping_ocm_custom_scene": near,
         "eval_images_on_a_kappaset_mgrs_tile_any_date": int(ev_tiles.isin(kappa_tiles).sum()),
         "eval_images_total": len(ev),
         "unparsed_examples": other.loc[~parsed, "image_filename"].head(10).tolist(),

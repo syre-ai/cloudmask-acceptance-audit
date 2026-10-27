@@ -4,9 +4,10 @@ For every perturbation x severity, OCM is re-run on degraded inputs and scored a
 unchanged expert label on the common support. Effects are paired differences from the clean
 run (same images), with ROI-cluster bootstrap 95% CIs.
 
-For coarser resolution an *oracle floor* is also reported: the expert label itself reduced to
-the coarse grid (block majority) and mapped back to 10 m. That is the best any mask at that
-resolution could do against a 10 m label, so OCM's loss beyond it is the model's share.
+For coarser resolution a *majority-label reference* is also reported: the expert label itself
+reduced to the coarse grid (4-class block majority) and mapped back to 10 m. It shows how much
+of the change comes from the coarser grid alone; it is a reference, not a bound on leak or
+discard (a block majority does not optimize those metrics).
 
 A per-band gain/offset check is run once: OCM normalizes each band per image, so predictions
 should be unchanged apart from clipping; reported as pixel agreement with the clean run.
@@ -29,10 +30,11 @@ from cmaudit.baselines import NO_DECISION
 from cmaudit.evaluate import ocm_pred, score_row, stack_cms
 from cmaudit.infer import load_models, ocm_input, predict_probs
 from cmaudit.metrics import paired_bootstrap_diff
-from cmaudit.perturb import SUITE, gain_offset, upsample_pred
+from cmaudit.perturb import NATIVE_GRID, SUITE, gain_offset, upsample_pred
 from cmaudit.samples import load, manifest, support
 
 OUT = Path("data/results/perturb_cms.parquet")
+REF = "Majority-label reference (label at coarse grid)"
 CHUNK = 32
 STATS = ["boa", "leak_rate", "discard_rate", "miss_rate"]
 
@@ -57,10 +59,10 @@ def run(models, ids: list[str], done: set) -> pd.DataFrame:
     rows = []
     jobs = [(name, s) for name, (_, _, sevs, _) in SUITE.items() for s in sevs
             if (name, float(s)) not in done]
-    if not any(n.startswith("Oracle") for n, _ in done):
-        jobs.append(("Oracle floor (label at coarse grid)", None))
+    if not any(n == REF for n, _ in done):
+        jobs.append((REF, None))
     for name, sev in tqdm(jobs, desc="perturbations"):
-        if name.startswith("Oracle"):
+        if name == REF:
             for f in SUITE["Coarser resolution"][2]:
                 for tid in ids:
                     lab = load("l1c", tid)["label"]
@@ -75,7 +77,7 @@ def run(models, ids: list[str], done: set) -> pd.DataFrame:
             probs = predict_probs(models, imgs, dtype=torch.float32)
             for tid, p in zip(chunk, probs):
                 pred = to_pred(p)
-                if name == "Coarser resolution":
+                if name in NATIVE_GRID:
                     pred = upsample_pred(pred, sev)
                 rows.append({"tortilla:id": tid, "perturbation": name, "severity": sev,
                              **score_row(load("l1c", tid)["label"], pred, support(tid))})

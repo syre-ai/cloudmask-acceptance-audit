@@ -73,6 +73,10 @@ def acquisition_key(s2_id: str) -> str:
 
 def cache_index(mode: str, out_dir: Path) -> Path:
     out = out_dir / f"index_{mode}.parquet"
+    if out.exists():
+        cached = pd.read_parquet(out, columns=["internal:subfile"])
+        if not cached["internal:subfile"].str.contains(REVISION).all():
+            out.unlink()  # built from an unpinned revision: rebuild from the pinned one
     if not out.exists():
         out_dir.mkdir(parents=True, exist_ok=True)
         for attempt in range(6):  # the index read goes through rate-limited /resolve/

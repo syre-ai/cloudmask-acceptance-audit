@@ -16,7 +16,7 @@ import numpy as np
 from cmaudit.download import EXTRA_LAYERS
 from cmaudit.samples import load, manifest, valid_mask
 
-CONTINUOUS = {"cloudmask_cloudscore_cs_v1", "cloudmask_cloudscore_cs_cdf_v1", "elevation"}
+CONTINUOUS = {"cloudmask_cloudscore_cs_v1", "cloudmask_cloudscore_cs_cdf_v1"}
 
 
 def main() -> None:

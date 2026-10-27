@@ -514,6 +514,7 @@ Copernicus Sentinel data 2018-2020; ESA WorldCover (CC BY 4.0). Model: OmniCloud
 
 def main() -> None:
     N = load()
+    N["ocm_2pct_rule"] = N["ocm_2pct_rule"].replace(">=", "≥").replace("<=", "≤")
     Path("README.md").write_text(readme(N))
     Path("site").mkdir(exist_ok=True)
     Path("site/cloudmask-audit.md").write_text(writeup(N))

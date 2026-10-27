@@ -7,16 +7,16 @@
   "timm": "1.0.30"
  },
  "tacofoundation/cloudsen12": {
-  "revision": "f9490f7de11b4f387f72ef800e73ccbb754711de",
-  "last_modified": "2025-01-05T14:47:21.000Z"
+  "revision_used": "f9490f7de11b4f387f72ef800e73ccbb754711de",
+  "remote_head_at_build": "f9490f7de11b4f387f72ef800e73ccbb754711de"
  },
  "NickWright/OmniCloudMask-Combined-Training-Dataset": {
-  "revision": "cf7f958be9954301848d6d08fdb420292134b0a9",
-  "last_modified": "2026-03-05T00:28:32.000Z"
+  "revision_used": "cf7f958be9954301848d6d08fdb420292134b0a9",
+  "remote_head_at_build": "cf7f958be9954301848d6d08fdb420292134b0a9"
  },
  "NickWright/OmniCloudMask": {
-  "revision": "c9a4fb88188709127aa25cfe51ae7fd41b0132f8",
-  "last_modified": "2025-12-16T03:16:16.000Z"
+  "revision_used": "not pinned by revision; weights verified by sha256 below",
+  "remote_head_at_build": "c9a4fb88188709127aa25cfe51ae7fd41b0132f8"
  },
  "ocm_weights_sha256": {
   "PM_model_OCM_7.97_R_G_NIR_3_smp_edgenext_small.usi_in1k_PT_state.safetensors": "d5fe67ad00f6fdb73eb8382ad925849e97fb82cedb46225344afff1a734a9c1d",

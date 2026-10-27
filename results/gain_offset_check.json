@@ -1,5 +1,5 @@
 {
  "perturbation": "per-band gain (0.9, 1.0, 1.15) and offset (0, +0.01, -0.005) reflectance on R, G, NIR",
- "images": 193,
- "pixel_agreement_with_clean": 0.9999363899877279
+ "images": 192,
+ "pixel_agreement_with_clean": 0.9999360575648126
 }

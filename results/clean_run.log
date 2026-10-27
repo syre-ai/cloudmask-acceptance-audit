@@ -1,0 +1,511 @@
+clean-clone run of 05625691b32e4bc658919fa789bec8d5f58dea0f started 2026-10-26T23:50:38-05:00
+uv sync --frozen
+Using CPython 3.12.12
+Creating virtual environment at: .venv
+   Building cloudmask-acceptance-audit @ file://<clone>
+      Built cloudmask-acceptance-audit @ file://<clone>
+Prepared 1 package in 546ms
+Installed 102 packages in 257ms
+ + affine==3.0.1
+ + aiohappyeyeballs==2.7.1
+ + aiohttp==3.14.5
+ + aiosignal==1.4.0
+ + anyio==4.15.1
+ + attrs==26.1.0
+ + beautifulsoup4==4.15.0
+ + brotli==1.2.1
+ + certifi==2026.10.23
+ + cffi==2.1.1
+ + charset-normalizer==3.5.2
+ + classcounter==0.2.1
+ + click==8.5.0
+ + cloudmask-acceptance-audit==0.1.0 (from file://<clone>)
+ + contourpy==1.4.0
+ + cssselect2==0.10.1
+ + cuda-bindings==12.9.4
+ + cuda-pathfinder==1.8.4
+ + cycler==0.12.1
+ + filelock==4.2.4
+ + fonttools==4.67.0
+ + frozenlist==1.8.0
+ + fsspec==2026.9.0
+ + gdown==6.4.2
+ + geopandas==1.2.0
+ + h11==0.16.0
+ + hf-xet==1.7.0
+ + httpcore2==2.16.0
+ + httpx2==2.16.0
+ + huggingface-hub==2.3.0
+ + idna==3.20
+ + iniconfig==2.3.1
+ + jinja2==3.1.6
+ + kiwisolver==1.5.1
+ + markdown==3.11.2
+ + markupsafe==3.0.4
+ + matplotlib==3.11.2
+ + mpmath==1.3.0
+ + multidict==7.2.1
+ + networkx==3.7
+ + numpy==2.5.4
+ + nvidia-cublas-cu12==12.8.4.1
+ + nvidia-cuda-cupti-cu12==12.8.90
+ + nvidia-cuda-nvrtc-cu12==12.8.93
+ + nvidia-cuda-runtime-cu12==12.8.90
+ + nvidia-cudnn-cu12==9.10.2.21
+ + nvidia-cufft-cu12==11.3.3.83
+ + nvidia-cufile-cu12==1.13.1.3
+ + nvidia-curand-cu12==10.3.9.90
+ + nvidia-cusolver-cu12==11.7.3.90
+ + nvidia-cusparse-cu12==12.5.8.93
+ + nvidia-cusparselt-cu12==0.7.1
+ + nvidia-nccl-cu12==2.27.5
+ + nvidia-nvjitlink-cu12==12.8.93
+ + nvidia-nvshmem-cu12==3.4.5
+ + nvidia-nvtx-cu12==12.8.90
+ + omnicloudmask==1.8.1
+ + packaging==26.3
+ + pandas==3.1.0
+ + pillow==13.0.0
+ + platformdirs==4.13.5
+ + pluggy==1.7.0
+ + propcache==0.5.4
+ + pyarrow==26.0.0
+ + pycparser==3.12
+ + pydyf==0.13.0
+ + pygments==2.21.0
+ + pyogrio==0.13.0
+ + pyparsing==3.3.3
+ + pyphen==0.18.1
+ + pyproj==3.8.0
+ + pysocks==1.7.1
+ + pytest==9.1.1
+ + python-dateutil==3.0.0
+ + pyyaml==6.0.3
+ + rasterio==1.5.2
+ + requests==2.34.2
+ + ruff==0.17.3
+ + safetensors==0.8.0
+ + scipy==1.18.1
+ + segmentation-models-pytorch==0.6.0
+ + setuptools==84.2.1
+ + shapely==2.2.0
+ + six==1.17.0
+ + soupsieve==3.0.4
+ + sympy==1.14.0
+ + tacoreader==0.5.6
+ + timm==1.0.30
+ + tinycss2==1.5.1
+ + tinyhtml5==2.1.0
+ + torch==2.10.0+cu128
+ + torchvision==0.25.0
+ + tqdm==4.70.1
+ + triton==3.6.0
+ + truststore==0.10.5
+ + typing-extensions==4.16.0
+ + tzdata==2026.5
+ + urllib3==2.8.0
+ + weasyprint==70.0
+ + webencodings==0.6.1
+ + yarl==1.25.1
+ + zopfli==0.4.3
+uv run pytest -q
+...............................                                          [100%]
+=============================== warnings summary ===============================
+tests/test_download.py::test_parse_and_decode_level_sample
+  <clone>/.venv/lib/python3.12/site-packages/rasterio/io.py:144: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+    rd = writer(
+
+tests/test_download.py::test_parse_and_decode_level_sample
+  <clone>/.venv/lib/python3.12/site-packages/rasterio/io.py:141: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+    rd = DatasetReader(mempath, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+31 passed, 2 warnings in 2.27s
+uv run python scripts/download_data.py
+2026-10-27 00:11:01,492 - INFO - HTTP Request: HEAD https://huggingface.co/NickWright/OmniCloudMask/resolve/main/PM_model_OCM_7.97_R_G_NIR_3_smp_regnety_004.pycls_in1k_PT_state.safetensors "HTTP/1.1 302 Found"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-10-27 00:11:01,495 - WARNING - Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-10-27 00:11:01,552 - INFO - HTTP Request: GET https://huggingface.co/api/models/NickWright/OmniCloudMask/xet-read-token/c9a4fb88188709127aa25cfe51ae7fd41b0132f8 "HTTP/1.1 200 OK"
+2026-10-27 00:11:03,002 - INFO - HTTP Request: HEAD https://huggingface.co/NickWright/OmniCloudMask/resolve/main/PM_model_OCM_7.97_R_G_NIR_3_smp_edgenext_small.usi_in1k_PT_state.safetensors "HTTP/1.1 302 Found"
+tortilla:data_split  tier         
+test                 clean            970
+                     same_location      5
+validation           clean            535
+dtype: int64
+done
+uv run python scripts/inspect_baselines.py
+lc10
+      10  n= 23561904  clear/thick/thin/shadow=[0.483, 0.333, 0.087, 0.098]
+      20  n=  7239353  clear/thick/thin/shadow=[0.526, 0.269, 0.094, 0.11]
+      30  n= 17249212  clear/thick/thin/shadow=[0.521, 0.281, 0.106, 0.092]
+      40  n=  7641002  clear/thick/thin/shadow=[0.55, 0.254, 0.105, 0.091]
+      50  n=  3334699  clear/thick/thin/shadow=[0.679, 0.22, 0.04, 0.061]
+      60  n=  9219268  clear/thick/thin/shadow=[0.433, 0.411, 0.068, 0.088]
+      70  n=  2436118  clear/thick/thin/shadow=[0.46, 0.38, 0.043, 0.118]
+      80  n=  9330872  clear/thick/thin/shadow=[0.581, 0.285, 0.047, 0.087]
+      90  n=  2872871  clear/thick/thin/shadow=[0.593, 0.3, 0.014, 0.093]
+     100  n=  1056945  clear/thick/thin/shadow=[0.545, 0.266, 0.031, 0.158]
+cloudmask_qa60
+       0  n= 55590472  clear/thick/thin/shadow=[0.68, 0.17, 0.034, 0.116]
+   16384  n= 15392652  clear/thick/thin/shadow=[0.094, 0.827, 0.038, 0.041]
+   32768  n= 12959120  clear/thick/thin/shadow=[0.324, 0.279, 0.33, 0.066]
+cloudmask_sen2cor
+       2  n=  1908689  clear/thick/thin/shadow=[0.46, 0.07, 0.004, 0.466]
+       3  n=  1560174  clear/thick/thin/shadow=[0.176, 0.019, 0.0, 0.805]
+       4  n= 19958339  clear/thick/thin/shadow=[0.782, 0.078, 0.041, 0.1]
+       5  n= 18105217  clear/thick/thin/shadow=[0.754, 0.122, 0.054, 0.07]
+       6  n=  6615825  clear/thick/thin/shadow=[0.723, 0.151, 0.015, 0.111]
+       7  n=  3926180  clear/thick/thin/shadow=[0.375, 0.434, 0.026, 0.165]
+       8  n=  8406205  clear/thick/thin/shadow=[0.191, 0.558, 0.226, 0.025]
+       9  n= 12553825  clear/thick/thin/shadow=[0.012, 0.964, 0.021, 0.003]
+      10  n=  6915899  clear/thick/thin/shadow=[0.337, 0.228, 0.363, 0.072]
+      11  n=  3991891  clear/thick/thin/shadow=[0.678, 0.208, 0.012, 0.101]
+cloudmask_s2cloudless
+       0  n=  6187425  clear/thick/thin/shadow=[0.928, 0.016, 0.016, 0.04]
+       1  n=  8100367  clear/thick/thin/shadow=[0.907, 0.023, 0.024, 0.047]
+       2  n=  5629884  clear/thick/thin/shadow=[0.903, 0.024, 0.021, 0.052]
+       3  n=  3752867  clear/thick/thin/shadow=[0.862, 0.034, 0.029, 0.074]
+       4  n=  2978367  clear/thick/thin/shadow=[0.82, 0.044, 0.039, 0.097]
+       5  n=  2433764  clear/thick/thin/shadow=[0.789, 0.051, 0.044, 0.116]
+       6  n=  2034380  clear/thick/thin/shadow=[0.76, 0.059, 0.051, 0.13]
+       7  n=  1732189  clear/thick/thin/shadow=[0.734, 0.069, 0.052, 0.145]
+       8  n=  1520206  clear/thick/thin/shadow=[0.707, 0.078, 0.053, 0.162]
+       9  n=  1384008  clear/thick/thin/shadow=[0.687, 0.084, 0.054, 0.174]
+      10  n=  1274560  clear/thick/thin/shadow=[0.671, 0.09, 0.056, 0.183]
+      11  n=  1188186  clear/thick/thin/shadow=[0.658, 0.093, 0.058, 0.191]
+      12  n=  1106245  clear/thick/thin/shadow=[0.641, 0.097, 0.061, 0.201]
+      13  n=  1025123  clear/thick/thin/shadow=[0.619, 0.102, 0.068, 0.211]
+      14  n=   947703  clear/thick/thin/shadow=[0.6, 0.108, 0.075, 0.217]
+      15  n=   879216  clear/thick/thin/shadow=[0.582, 0.114, 0.082, 0.222]
+cloudmask_cloudscore_cs_v1
+       0  n= 12089569  clear/thick/thin/shadow=[0.0, 0.989, 0.006, 0.005]
+    1000  n=  5540665  clear/thick/thin/shadow=[0.005, 0.896, 0.042, 0.057]
+    2000  n=  4869508  clear/thick/thin/shadow=[0.024, 0.658, 0.101, 0.217]
+    3000  n=  5366932  clear/thick/thin/shadow=[0.067, 0.418, 0.186, 0.329]
+    4000  n=  6191049  clear/thick/thin/shadow=[0.169, 0.252, 0.259, 0.32]
+    5000  n=  7221877  clear/thick/thin/shadow=[0.457, 0.125, 0.195, 0.223]
+    6000  n= 12068728  clear/thick/thin/shadow=[0.803, 0.037, 0.09, 0.069]
+    7000  n= 10757945  clear/thick/thin/shadow=[0.929, 0.013, 0.042, 0.016]
+    8000  n= 11080577  clear/thick/thin/shadow=[0.992, 0.002, 0.005, 0.001]
+    9000  n=  7255279  clear/thick/thin/shadow=[0.985, 0.001, 0.013, 0.0]
+   10000  n=   427225  clear/thick/thin/shadow=[0.976, 0.01, 0.01, 0.003]
+   11000  n=    14810  clear/thick/thin/shadow=[0.005, 0.437, 0.432, 0.127]
+   12000  n=    47068  clear/thick/thin/shadow=[0.509, 0.123, 0.131, 0.237]
+   13000  n=    20150  clear/thick/thin/shadow=[0.484, 0.076, 0.258, 0.182]
+   14000  n=    27129  clear/thick/thin/shadow=[0.369, 0.132, 0.404, 0.094]
+   15000  n=    25437  clear/thick/thin/shadow=[0.381, 0.016, 0.481, 0.122]
+cloudmask_cloudscore_cs_cdf_v1
+       0  n=  9637663  clear/thick/thin/shadow=[0.0, 0.996, 0.002, 0.003]
+    1000  n=  4848285  clear/thick/thin/shadow=[0.0, 0.976, 0.015, 0.008]
+    2000  n=  3231984  clear/thick/thin/shadow=[0.001, 0.907, 0.049, 0.043]
+    3000  n=  2771789  clear/thick/thin/shadow=[0.003, 0.79, 0.094, 0.113]
+    4000  n=  3404045  clear/thick/thin/shadow=[0.019, 0.563, 0.157, 0.261]
+    5000  n=  4465628  clear/thick/thin/shadow=[0.057, 0.357, 0.186, 0.4]
+    6000  n=  5336290  clear/thick/thin/shadow=[0.145, 0.24, 0.241, 0.374]
+    7000  n=  8049670  clear/thick/thin/shadow=[0.451, 0.104, 0.214, 0.231]
+    8000  n= 29160737  clear/thick/thin/shadow=[0.909, 0.011, 0.055, 0.026]
+    9000  n= 11840154  clear/thick/thin/shadow=[0.996, 0.0, 0.003, 0.001]
+   10000  n=    16511  clear/thick/thin/shadow=[0.039, 0.545, 0.279, 0.137]
+   11000  n=     5828  clear/thick/thin/shadow=[0.0, 0.979, 0.0, 0.021]
+   12000  n=     4714  clear/thick/thin/shadow=[0.081, 0.164, 0.559, 0.196]
+   13000  n=    18224  clear/thick/thin/shadow=[0.053, 0.449, 0.361, 0.138]
+   14000  n=     6025  clear/thick/thin/shadow=[0.0, 0.985, 0.0, 0.015]
+   15000  n=    10622  clear/thick/thin/shadow=[0.263, 0.14, 0.47, 0.127]
+cloudmask_unetmobv2_v1
+       0  n= 43662567  clear/thick/thin/shadow=[0.939, 0.015, 0.023, 0.023]
+       1  n= 26611455  clear/thick/thin/shadow=[0.018, 0.909, 0.04, 0.034]
+       2  n=  6771422  clear/thick/thin/shadow=[0.182, 0.095, 0.683, 0.041]
+       3  n=  6896800  clear/thick/thin/shadow=[0.109, 0.048, 0.01, 0.834]
+cloudmask_unetmobv2_v2
+       0  n= 43665603  clear/thick/thin/shadow=[0.939, 0.015, 0.024, 0.023]
+       1  n= 26250539  clear/thick/thin/shadow=[0.018, 0.918, 0.037, 0.027]
+       2  n=  6580775  clear/thick/thin/shadow=[0.178, 0.1, 0.692, 0.03]
+       3  n=  7445327  clear/thick/thin/shadow=[0.108, 0.058, 0.025, 0.809]
+cloudmask_sensei_v2
+       0  n= 43208691  clear/thick/thin/shadow=[0.944, 0.013, 0.023, 0.02]
+       1  n= 25368047  clear/thick/thin/shadow=[0.014, 0.931, 0.03, 0.024]
+       2  n=  8095088  clear/thick/thin/shadow=[0.192, 0.155, 0.602, 0.051]
+       3  n=  7270418  clear/thick/thin/shadow=[0.1, 0.051, 0.017, 0.832]
+uv run python scripts/screen_ocm_training.py
+<clone>/scripts/screen_ocm_training.py:118: DeprecationWarning: The 'shapely.ops.transform()' function is deprecated. Use 'shapely.transform()' or 'shapely.transform_coordseq()' instead. See https://shapely.readthedocs.io/en/latest/manual.html#shapely.ops.transform for more details.
+  discs.append(shp_transform(back, Point(0, 0).buffer(radius, 64)))
+subset
+CloudSEN12 high super res tiles       33960
+CloudSEN12 scribble                   20000
+CloudSEN12 high                       16980
+Kappaset                               9250
+CloudSEN12 high super res raw          8490
+CloudSEN12 high planetary computer     8403
+CloudSEN12 2k                          1694
+OCM hard negative                       920
+OCM scribble                            831
+{
+ "training_rows": 100528,
+ "rows_by_subset": {
+  "CloudSEN12 high super res tiles": 33960,
+  "CloudSEN12 scribble": 20000,
+  "CloudSEN12 high": 16980,
+  "Kappaset": 9250,
+  "CloudSEN12 high super res raw": 8490,
+  "CloudSEN12 high planetary computer": 8403,
+  "CloudSEN12 2k": 1694,
+  "OCM hard negative": 920,
+  "OCM scribble": 831
+ },
+ "cloudsen12_rows": 89527,
+ "cloudsen12_split_tags": {
+  "train": 86773,
+  "test": 1480,
+  "validation": 1274
+ },
+ "cloudsen12_ids_matching_eval_images": [],
+ "cloudsen12_matching_rows_by_subset": {},
+ "non_cloudsen12_rows": 11001,
+ "non_cloudsen12_rows_with_tile_and_date": 11001,
+ "non_cloudsen12_same_tile_and_date_as_eval": [],
+ "ocm_custom_scenes_with_latlon": 1751,
+ "eval_images_possibly_overlapping_ocm_custom_scene": [
+  "ROI_03381__20190507T174919_20190507T174933_T14VNJ",
+  "ROI_03381__20190718T173911_20190718T174740_T14VNJ",
+  "ROI_03381__20190916T173951_20190916T173948_T14VNJ",
+  "ROI_03381__20200322T174919_20200322T175638_T14VNJ",
+  "ROI_03381__20200615T174911_20200615T174914_T14VNJ",
+  "ROI_12023__20181219T133221_20181219T133216_T23MMR",
+  "ROI_12023__20190617T133231_20190617T133228_T23MMR",
+  "ROI_12023__20190816T133231_20190816T133227_T23MMR",
+  "ROI_12023__20200412T133221_20200412T133223_T23MMR",
+  "ROI_12023__20200721T133231_20200721T133230_T23MMR"
+ ],
+ "eval_images_on_a_kappaset_mgrs_tile_any_date": 94,
+ "eval_images_total": 1510
+}
+unparsed examples: []
+uv run python scripts/run_ocm.py
+uv run python scripts/evaluate.py
+test images (CloudSEN12-overlap-screened): 960  ROIs: 192
+                                    group   boa  boa_lo  boa_hi  leak_rate  leak_rate_lo  leak_rate_hi  discard_rate  leak_thin  leak_shadow  coverage  cond_discard_rate
+                   OmniCloudMask v4 | l1c 0.942   0.936   0.947      0.061         0.053         0.070         0.046      0.029        0.019     1.000              0.046
+                   OmniCloudMask v4 | l2a 0.941   0.935   0.946      0.063         0.055         0.072         0.046      0.030        0.020     1.000              0.046
+                      SEnSeI v2 | product 0.934   0.928   0.941      0.062         0.053         0.072         0.062      0.028        0.018     1.000              0.062
+                   UnetMobV2 v2 | product 0.933   0.927   0.939      0.071         0.062         0.080         0.053      0.031        0.023     1.000              0.053
+                   UnetMobV2 v1 | product 0.932   0.925   0.938      0.075         0.065         0.086         0.050      0.034        0.024     1.000              0.050
+                Cloud Score+ cs | product 0.891   0.880   0.901      0.085         0.074         0.099         0.127      0.047        0.024     0.987              0.116
+            Cloud Score+ cs_cdf | product 0.833   0.819   0.846      0.222         0.208         0.238         0.023      0.090        0.085     0.986              0.009
+s2cloudless (upstream defaults) | product 0.808   0.796   0.819      0.232         0.219         0.247         0.070      0.052        0.116     1.000              0.070
+        s2cloudless (raw > 0.4) | product 0.794   0.782   0.805      0.249         0.237         0.263         0.064      0.054        0.118     1.000              0.064
+              Sen2Cor SCL (L2A) | product 0.747   0.734   0.760      0.285         0.270         0.300         0.110      0.049        0.104     1.000              0.110
+             QA60 (L1C bitmask) | product 0.696   0.680   0.711      0.325         0.311         0.342         0.150      0.043        0.114     1.000              0.150
+                                   method  d_boa  d_boa_lo  d_boa_hi  d_leak_rate  d_leak_rate_lo  d_leak_rate_hi  d_discard_rate  d_discard_rate_lo  d_discard_rate_hi
+                Cloud Score+ cs | product +0.051    +0.042    +0.061       -0.024          -0.036          -0.013          -0.081             -0.101             -0.064
+            Cloud Score+ cs_cdf | product +0.110    +0.099    +0.122       -0.161          -0.174          -0.150          +0.024             +0.005             +0.038
+                   OmniCloudMask v4 | l2a +0.001    +0.000    +0.003       -0.002          -0.005          +0.000          +0.000             -0.001             +0.001
+             QA60 (L1C bitmask) | product +0.246    +0.231    +0.263       -0.264          -0.280          -0.250          -0.104             -0.135             -0.076
+                      SEnSeI v2 | product +0.008    +0.004    +0.012       -0.001          -0.006          +0.004          -0.015             -0.022             -0.009
+              Sen2Cor SCL (L2A) | product +0.195    +0.183    +0.208       -0.224          -0.238          -0.210          -0.063             -0.086             -0.042
+                   UnetMobV2 v1 | product +0.010    +0.006    +0.014       -0.014          -0.021          -0.008          -0.004             -0.009             +0.002
+                   UnetMobV2 v2 | product +0.009    +0.006    +0.012       -0.010          -0.015          -0.005          -0.006             -0.012             -0.001
+        s2cloudless (raw > 0.4) | product +0.148    +0.138    +0.158       -0.189          -0.200          -0.177          -0.017             -0.029             -0.005
+s2cloudless (upstream defaults) | product +0.135    +0.125    +0.145       -0.171          -0.184          -0.159          -0.024             -0.037             -0.011
+[[124.83   1.49   2.91   1.68]
+ [  1.78  66.95   1.87   1.08]
+ [  3.84   2.56  15.03   0.4 ]
+ [  2.47   2.24   0.79  18.14]] (OCM L1C, Mpx, rows=truth)
+uv run python scripts/sweep.py
+<clone>/.venv/lib/python3.12/site-packages/numpy/lib/_nanfunctions_impl.py:1573: RuntimeWarning: All-NaN slice encountered
+  return _nanquantile_unchecked(
+                               method                                 rule  achievable  threshold_native  val_leak  test_leak  test_leak_lo  test_leak_hi  test_discard  test_discard_lo  test_discard_hi
+               OmniCloudMask v4 | l1c    leak <= 2% (chosen on validation)        True             0.853     0.020      0.020         0.014         0.026         0.136            0.124            0.149
+               OmniCloudMask v4 | l1c    leak <= 5% (chosen on validation)        True             0.527     0.050      0.052         0.044         0.060         0.056            0.049            0.063
+               OmniCloudMask v4 | l1c discard <= 2% (chosen on validation)        True             0.186     0.105      0.110         0.100         0.119         0.016            0.013            0.020
+               OmniCloudMask v4 | l1c discard <= 5% (chosen on validation)        True             0.429     0.061      0.064         0.056         0.073         0.042            0.036            0.048
+               OmniCloudMask v4 | l2a    leak <= 2% (chosen on validation)        True             0.853     0.020      0.021         0.015         0.028         0.138            0.125            0.151
+               OmniCloudMask v4 | l2a    leak <= 5% (chosen on validation)        True             0.547     0.050      0.051         0.043         0.060         0.060            0.052            0.067
+               OmniCloudMask v4 | l2a discard <= 2% (chosen on validation)        True             0.186     0.108      0.113         0.103         0.124         0.016            0.013            0.020
+               OmniCloudMask v4 | l2a discard <= 5% (chosen on validation)        True             0.437     0.063      0.065         0.057         0.074         0.043            0.037            0.049
+s2cloudless raw probability | product    leak <= 2% (chosen on validation)       False            -0.010       NaN        NaN           NaN           NaN         1.000            1.000            1.000
+s2cloudless raw probability | product    leak <= 5% (chosen on validation)       False            -0.010       NaN        NaN           NaN           NaN         1.000            1.000            1.000
+s2cloudless raw probability | product discard <= 2% (chosen on validation)        True             0.810     0.304      0.317         0.304         0.330         0.021            0.014            0.028
+s2cloudless raw probability | product discard <= 5% (chosen on validation)        True             0.500     0.251      0.266         0.253         0.280         0.048            0.038            0.058
+            Cloud Score+ cs | product    leak <= 2% (chosen on validation)        True             0.804     0.020      0.022         0.011         0.036         0.590            0.558            0.620
+            Cloud Score+ cs | product    leak <= 5% (chosen on validation)        True             0.651     0.050      0.057         0.047         0.069         0.219            0.197            0.243
+            Cloud Score+ cs | product discard <= 2% (chosen on validation)        True             0.400     0.221      0.229         0.214         0.245         0.024            0.011            0.041
+            Cloud Score+ cs | product discard <= 5% (chosen on validation)        True             0.489     0.150      0.162         0.148         0.178         0.044            0.030            0.063
+        Cloud Score+ cs_cdf | product    leak <= 2% (chosen on validation)        True             0.875     0.017      0.024         0.014         0.036         0.447            0.415            0.476
+        Cloud Score+ cs_cdf | product    leak <= 5% (chosen on validation)        True             0.832     0.049      0.049         0.038         0.061         0.206            0.182            0.230
+        Cloud Score+ cs_cdf | product discard <= 2% (chosen on validation)        True             0.616     0.214      0.212         0.198         0.229         0.024            0.010            0.043
+        Cloud Score+ cs_cdf | product discard <= 5% (chosen on validation)        True             0.714     0.141      0.146         0.131         0.162         0.045            0.030            0.065
+uv run python scripts/subgroups.py
+           method              group  images  rois  pixels_M  leak_rate  leak_rate_lo  leak_rate_hi  discard_rate  discard_rate_lo  discard_rate_hi
+ OmniCloudMask v4      Bare / sparse     850   170    28.241      0.047         0.034         0.065         0.056            0.041            0.074
+ OmniCloudMask v4           Built-up     450    90     9.788      0.037         0.021         0.061         0.041            0.025            0.060
+ OmniCloudMask v4           Cropland     485    97    22.405      0.056         0.044         0.068         0.042            0.031            0.054
+ OmniCloudMask v4          Grassland     855   171    51.226      0.054         0.041         0.067         0.044            0.037            0.052
+ OmniCloudMask v4 Herbaceous wetland     340    68     8.265      0.049         0.039         0.059         0.067            0.045            0.084
+ OmniCloudMask v4    Moss and lichen     205    41     3.519      0.081         0.049         0.111         0.036            0.024            0.055
+ OmniCloudMask v4          Shrubland     570   114    21.008      0.044         0.033         0.057         0.040            0.027            0.056
+ OmniCloudMask v4       Snow and ice      70    14     6.754      0.130         0.064         0.184         0.036            0.017            0.067
+ OmniCloudMask v4         Tree cover     755   151    69.335      0.056         0.045         0.067         0.041            0.031            0.054
+ OmniCloudMask v4              Water     490    98    27.512      0.110         0.063         0.159         0.065            0.042            0.089
+Sen2Cor SCL (L2A)      Bare / sparse     850   170    28.241      0.248         0.203         0.298         0.179            0.112            0.239
+Sen2Cor SCL (L2A)           Built-up     450    90     9.788      0.193         0.152         0.230         0.126            0.058            0.190
+Sen2Cor SCL (L2A)           Cropland     485    97    22.405      0.255         0.223         0.292         0.078            0.039            0.121
+Sen2Cor SCL (L2A)          Grassland     855   171    51.226      0.279         0.258         0.303         0.103            0.068            0.142
+Sen2Cor SCL (L2A) Herbaceous wetland     340    68     8.265      0.319         0.260         0.367         0.060            0.010            0.137
+Sen2Cor SCL (L2A)    Moss and lichen     205    41     3.519      0.334         0.286         0.376         0.047            0.026            0.082
+Sen2Cor SCL (L2A)          Shrubland     570   114    21.008      0.288         0.251         0.326         0.081            0.041            0.138
+Sen2Cor SCL (L2A)       Snow and ice      70    14     6.754      0.406         0.339         0.479         0.314            0.065            0.642
+Sen2Cor SCL (L2A)         Tree cover     755   151    69.335      0.277         0.250         0.298         0.101            0.071            0.134
+Sen2Cor SCL (L2A)              Water     490    98    27.512      0.351         0.313         0.392         0.087            0.048            0.133
+  Cloud Score+ cs      Bare / sparse     850   170    28.241      0.089         0.053         0.139         0.257            0.162            0.376
+  Cloud Score+ cs           Built-up     450    90     9.788      0.053         0.030         0.080         0.105            0.069            0.143
+  Cloud Score+ cs           Cropland     485    97    22.405      0.068         0.050         0.090         0.095            0.074            0.119
+  Cloud Score+ cs          Grassland     855   171    51.226      0.075         0.059         0.092         0.096            0.079            0.115
+  Cloud Score+ cs Herbaceous wetland     340    68     8.265      0.089         0.058         0.121         0.077            0.057            0.104
+  Cloud Score+ cs    Moss and lichen     205    41     3.519      0.110         0.064         0.150         0.063            0.042            0.088
+  Cloud Score+ cs          Shrubland     570   114    21.008      0.070         0.048         0.093         0.065            0.044            0.098
+  Cloud Score+ cs       Snow and ice      70    14     6.754      0.091         0.026         0.177         0.172            0.118            0.249
+  Cloud Score+ cs         Tree cover     755   151    69.335      0.082         0.060         0.106         0.104            0.084            0.123
+  Cloud Score+ cs              Water     490    98    27.512      0.148         0.096         0.205         0.211            0.150            0.287
+           method     dimension           group  images  rois  leak_rate  leak_rate_lo  leak_rate_hi  discard_rate  discard_rate_lo  discard_rate_hi
+ OmniCloudMask v4  Cloud regime     clear (<1%)     201   190      0.000         0.000         0.000         0.005            0.000            0.012
+ OmniCloudMask v4  Cloud regime  heavy (70-99%)     251   158      0.269         0.214         0.326         0.197            0.172            0.224
+ OmniCloudMask v4  Cloud regime   light (1-30%)     172   145      0.032         0.026         0.039         0.025            0.019            0.030
+ OmniCloudMask v4  Cloud regime  mixed (30-70%)     256   165      0.103         0.085         0.120         0.092            0.075            0.109
+ OmniCloudMask v4  Cloud regime overcast (>99%)      80    71      0.992         0.975         0.998         0.653            0.411            0.859
+ OmniCloudMask v4     Continent          Africa     205    41      0.082         0.058         0.113         0.046            0.035            0.061
+ OmniCloudMask v4     Continent      Antarctica       5     1      0.070         0.070         0.070         0.022            0.022            0.022
+ OmniCloudMask v4     Continent            Asia     215    43      0.050         0.037         0.063         0.041            0.032            0.050
+ OmniCloudMask v4     Continent          Europe     125    25      0.066         0.049         0.088         0.048            0.032            0.066
+ OmniCloudMask v4     Continent   North America     160    32      0.057         0.041         0.078         0.047            0.032            0.066
+ OmniCloudMask v4     Continent         Oceania      50    10      0.058         0.036         0.087         0.052            0.031            0.075
+ OmniCloudMask v4     Continent   South America     200    40      0.051         0.041         0.061         0.051            0.040            0.064
+ OmniCloudMask v4 Sun elevation     high (>45°)     267   121      0.070         0.055         0.090         0.046            0.035            0.058
+ OmniCloudMask v4 Sun elevation      low (<25°)     152    87      0.067         0.044         0.102         0.048            0.032            0.067
+ OmniCloudMask v4 Sun elevation    mid (25-45°)     541   180      0.054         0.046         0.066         0.046            0.039            0.054
+ OmniCloudMask v4        Season          autumn     210   129      0.067         0.048         0.088         0.049            0.038            0.062
+ OmniCloudMask v4        Season          spring     224   134      0.064         0.046         0.086         0.045            0.033            0.061
+ OmniCloudMask v4        Season          summer     367   170      0.063         0.049         0.080         0.051            0.040            0.061
+ OmniCloudMask v4        Season          winter     159   103      0.047         0.031         0.066         0.038            0.026            0.053
+Sen2Cor SCL (L2A)  Cloud regime     clear (<1%)     201   190      0.000         0.000         0.000         0.099            0.066            0.138
+Sen2Cor SCL (L2A)  Cloud regime  heavy (70-99%)     251   158      0.722         0.703         0.746         0.163            0.120            0.205
+Sen2Cor SCL (L2A)  Cloud regime   light (1-30%)     172   145      0.127         0.117         0.137         0.068            0.041            0.099
+Sen2Cor SCL (L2A)  Cloud regime  mixed (30-70%)     256   165      0.380         0.361         0.398         0.158            0.117            0.200
+Sen2Cor SCL (L2A)  Cloud regime overcast (>99%)      80    71      0.997         0.994         0.998         0.192            0.000            0.475
+Sen2Cor SCL (L2A)     Continent          Africa     205    41      0.310         0.275         0.345         0.112            0.078            0.152
+Sen2Cor SCL (L2A)     Continent      Antarctica       5     1      0.279         0.279         0.279         0.393            0.393            0.393
+Sen2Cor SCL (L2A)     Continent            Asia     215    43      0.280         0.248         0.312         0.140            0.091            0.198
+Sen2Cor SCL (L2A)     Continent          Europe     125    25      0.292         0.255         0.335         0.099            0.046            0.167
+Sen2Cor SCL (L2A)     Continent   North America     160    32      0.265         0.236         0.295         0.095            0.051            0.150
+Sen2Cor SCL (L2A)     Continent         Oceania      50    10      0.280         0.225         0.336         0.045            0.014            0.087
+Sen2Cor SCL (L2A)     Continent   South America     200    40      0.276         0.243         0.310         0.100            0.056            0.148
+Sen2Cor SCL (L2A) Sun elevation     high (>45°)     267   121      0.270         0.233         0.311         0.156            0.116            0.198
+Sen2Cor SCL (L2A) Sun elevation      low (<25°)     152    87      0.309         0.263         0.356         0.110            0.065            0.159
+Sen2Cor SCL (L2A) Sun elevation    mid (25-45°)     541   180      0.285         0.265         0.306         0.086            0.060            0.113
+Sen2Cor SCL (L2A)        Season          autumn     210   129      0.307         0.266         0.349         0.084            0.055            0.115
+Sen2Cor SCL (L2A)        Season          spring     224   134      0.284         0.246         0.328         0.174            0.124            0.230
+Sen2Cor SCL (L2A)        Season          summer     367   170      0.313         0.284         0.344         0.060            0.038            0.086
+Sen2Cor SCL (L2A)        Season          winter     159   103      0.196         0.158         0.239         0.147            0.096            0.199
+  Cloud Score+ cs  Cloud regime     clear (<1%)     201   190      0.000         0.000         0.000         0.023            0.007            0.048
+  Cloud Score+ cs  Cloud regime  heavy (70-99%)     251   158      0.400         0.323         0.476         0.511            0.456            0.566
+  Cloud Score+ cs  Cloud regime   light (1-30%)     172   145      0.065         0.056         0.074         0.053            0.033            0.080
+  Cloud Score+ cs  Cloud regime  mixed (30-70%)     256   165      0.164         0.137         0.190         0.263            0.225            0.306
+  Cloud Score+ cs  Cloud regime overcast (>99%)      80    71      0.993         0.959         0.999         0.829            0.653            0.960
+  Cloud Score+ cs     Continent          Africa     205    41      0.105         0.073         0.139         0.134            0.084            0.204
+  Cloud Score+ cs     Continent      Antarctica       5     1      0.045         0.045         0.045         0.244            0.244            0.244
+  Cloud Score+ cs     Continent            Asia     215    43      0.074         0.053         0.094         0.107            0.081            0.136
+  Cloud Score+ cs     Continent          Europe     125    25      0.072         0.048         0.100         0.104            0.082            0.127
+  Cloud Score+ cs     Continent   North America     160    32      0.075         0.051         0.097         0.146            0.108            0.190
+  Cloud Score+ cs     Continent         Oceania      50    10      0.103         0.070         0.140         0.081            0.048            0.118
+  Cloud Score+ cs     Continent   South America     200    40      0.090         0.064         0.120         0.148            0.109            0.204
+  Cloud Score+ cs Sun elevation     high (>45°)     267   121      0.094         0.072         0.117         0.105            0.075            0.152
+  Cloud Score+ cs Sun elevation      low (<25°)     152    87      0.086         0.051         0.126         0.207            0.147            0.268
+  Cloud Score+ cs Sun elevation    mid (25-45°)     541   180      0.080         0.067         0.095         0.117            0.098            0.139
+  Cloud Score+ cs        Season          autumn     210   129      0.098         0.074         0.123         0.130            0.090            0.178
+  Cloud Score+ cs        Season          spring     224   134      0.080         0.057         0.111         0.127            0.088            0.175
+  Cloud Score+ cs        Season          summer     367   170      0.084         0.065         0.102         0.152            0.126            0.180
+  Cloud Score+ cs        Season          winter     159   103      0.082         0.052         0.118         0.081            0.047            0.115
+uv run python scripts/sensitivity.py
+                       subset  images  rois    boa  boa_lo  boa_hi  leak_rate  leak_rate_lo  leak_rate_hi  discard_rate  discard_rate_lo  discard_rate_hi
+     all screened test images     960   192 0.9423  0.9365  0.9474     0.0609        0.0529        0.0699        0.0464           0.0404           0.0528
+excluding Kappaset MGRS tiles     910   185 0.9416  0.9357  0.9470     0.0621        0.0537        0.0715        0.0468           0.0408           0.0533
+uv run python scripts/perturbations.py
+                                   perturbation  severity   d_boa  d_boa_lo  d_boa_hi  d_leak_rate  d_leak_rate_lo  d_leak_rate_hi  d_discard_rate  d_miss_rate
+                                   Sensor noise   +0.0050 -0.0133   -0.0191   -0.0087      +0.0265         +0.0189         +0.0361         -0.0072      +0.0337
+                                   Sensor noise   +0.0100 -0.0380   -0.0468   -0.0295      +0.0673         +0.0543         +0.0809         -0.0139      +0.0898
+                                   Sensor noise   +0.0200 -0.0844   -0.0984   -0.0713      +0.1321         +0.1141         +0.1509         -0.0230      +0.1918
+                                   Optical blur   +0.5000 -0.0007   -0.0024   +0.0009      -0.0061         -0.0085         -0.0040         +0.0093      -0.0079
+                                   Optical blur   +1.0000 -0.0334   -0.0410   -0.0259      -0.0290         -0.0352         -0.0237         +0.1047      -0.0379
+                                   Optical blur   +2.0000 -0.2197   -0.2366   -0.2033      -0.0352         -0.0425         -0.0282         +0.4950      -0.0556
+                             Coarser resolution   +2.0000 -0.0084   -0.0104   -0.0065      +0.0044         +0.0019         +0.0068         +0.0124      +0.0044
+                             Coarser resolution   +3.0000 -0.0137   -0.0166   -0.0111      +0.0073         +0.0039         +0.0113         +0.0200      +0.0073
+                             Coarser resolution   +5.0000 -0.0300   -0.0345   -0.0260      +0.0221         +0.0163         +0.0291         +0.0365      +0.0236
+                     Coarse data on a 10 m grid   +2.0000 -0.0291   -0.0371   -0.0216      -0.0270         -0.0325         -0.0223         +0.0937      -0.0354
+                     Coarse data on a 10 m grid   +3.0000 -0.0773   -0.0911   -0.0644      -0.0331         -0.0400         -0.0266         +0.1997      -0.0451
+                     Coarse data on a 10 m grid   +5.0000 -0.2698   -0.2862   -0.2533      -0.0352         -0.0428         -0.0281         +0.5983      -0.0586
+           Coarse data on a 10 m grid (nearest)   +2.0000 -0.0049   -0.0085   -0.0017      -0.0100         -0.0143         -0.0061         +0.0232      -0.0133
+           Coarse data on a 10 m grid (nearest)   +3.0000 -0.0565   -0.0672   -0.0472      +0.0043         -0.0039         +0.0124         +0.1169      -0.0039
+           Coarse data on a 10 m grid (nearest)   +5.0000 -0.2818   -0.2987   -0.2643      +0.1099         +0.0931         +0.1260         +0.5368      +0.0268
+                            NIR misregistration   +1.0000 -0.0008   -0.0017   -0.0001      +0.0007         -0.0004         +0.0021         +0.0009      +0.0008
+                            NIR misregistration   +2.0000 -0.0019   -0.0032   -0.0006      +0.0001         -0.0016         +0.0020         +0.0039      -0.0002
+                            NIR misregistration   +4.0000 -0.0049   -0.0072   -0.0028      +0.0012         -0.0017         +0.0051         +0.0089      +0.0008
+                             Clip only (16-bit)   +1.0000 -0.0004   -0.0008   -0.0001      +0.0004         +0.0001         +0.0009         +0.0003      +0.0005
+                             Clip only (16-bit)   +0.6000 -0.0145   -0.0219   -0.0080      +0.0231         +0.0121         +0.0354         +0.0005      +0.0286
+                             Clip only (16-bit)   +0.3000 -0.0901   -0.1056   -0.0755      +0.1328         +0.1114         +0.1543         -0.0091      +0.1893
+                    8-bit lossless (clip level)   +1.0000 -0.0018   -0.0037   -0.0000      +0.0050         +0.0026         +0.0077         -0.0025      +0.0062
+                    8-bit lossless (clip level)   +0.6000 -0.0145   -0.0222   -0.0078      +0.0238         +0.0128         +0.0362         -0.0006      +0.0296
+                    8-bit lossless (clip level)   +0.3000 -0.0899   -0.1054   -0.0753      +0.1331         +0.1118         +0.1545         -0.0104      +0.1902
+                            8-bit JPEG delivery  +95.0000 -0.0193   -0.0276   -0.0121      +0.0313         +0.0197         +0.0448         -0.0005      +0.0392
+                            8-bit JPEG delivery  +75.0000 -0.0317   -0.0401   -0.0238      +0.0462         +0.0333         +0.0590         +0.0055      +0.0579
+                            8-bit JPEG delivery  +50.0000 -0.0475   -0.0579   -0.0377      +0.0630         +0.0480         +0.0781         +0.0160      +0.0791
+Majority-label reference (label at coarse grid)   +2.0000 +0.0530   +0.0478   +0.0587      -0.0538         -0.0628         -0.0457         -0.0449      -0.0611
+Majority-label reference (label at coarse grid)   +3.0000 +0.0511   +0.0459   +0.0567      -0.0545         -0.0636         -0.0464         -0.0401      -0.0620
+Majority-label reference (label at coarse grid)   +5.0000 +0.0465   +0.0413   +0.0521      -0.0501         -0.0591         -0.0420         -0.0359      -0.0571
+{'perturbation': 'per-band gain (0.9, 1.0, 1.15) and offset (0, +0.01, -0.005) reflectance on R, G, NIR', 'images': 192, 'pixel_agreement_with_clean': 0.9999360575648126}
+uv run python scripts/mitigations.py
+ k_px  val_leak  val_discard  test_leak_rate  test_leak_rate_lo  test_leak_rate_hi  test_discard_rate  test_discard_rate_lo  test_discard_rate_hi  chosen_for_2pct_leak
+    0    0.0573       0.0545          0.0609             0.0526             0.0701             0.0464                0.0403                0.0527                 False
+    1    0.0518       0.0627          0.0546             0.0465             0.0638             0.0540                0.0477                0.0605                 False
+    2    0.0479       0.0720          0.0499             0.0419             0.0589             0.0630                0.0566                0.0698                 False
+    3    0.0445       0.0841          0.0459             0.0380             0.0548             0.0748                0.0682                0.0818                 False
+    4    0.0424       0.0948          0.0433             0.0354             0.0521             0.0853                0.0784                0.0924                 False
+    5    0.0402       0.1085          0.0407             0.0327             0.0494             0.0989                0.0915                0.1065                 False
+    6    0.0389       0.1188          0.0391             0.0311             0.0477             0.1092                0.1013                0.1173                 False
+    7    0.0377       0.1287          0.0377             0.0298             0.0462             0.1191                0.1109                0.1274                 False
+    8    0.0365       0.1400          0.0362             0.0284             0.0449             0.1305                0.1217                0.1388                 False
+gate_cover_from  threshold  scenes_kept  scenes_total  kept_truly_over_threshold  truly_ok_scenes_rejected  pixel_leak_in_kept_after_ocm_mask  leak_lo  leak_hi
+  OmniCloudMask     0.1000          252           960                     0.0595                    0.0405                             0.0159   0.0071   0.0264
+    Sen2Cor SCL     0.1000          364           960                     0.4341                    0.1660                             0.0335   0.0247   0.0434
+uv run python scripts/figures.py
+uv run python scripts/examples.py
+[('ROI_00936__20191015T080911_20191015T083220_T35LPK', 'Thick cloud over water accepted'), ('ROI_11216__20191018T072909_20191018T074707_T37NHJ', 'Cloud missed, mostly clear scene'), ('ROI_03652__20200309T101021_20200309T101020_T32SME', 'Clear ground discarded, cloudy scene')]
+uv run python scripts/provenance.py
+{
+ "packages": {
+  "omnicloudmask": "1.8.1",
+  "torch": "2.10.0+cu128",
+  "tacoreader": "0.5.6",
+  "segmentation-models-pytorch": "0.6.0",
+  "timm": "1.0.30"
+ },
+ "tacofoundation/cloudsen12": {
+  "revision_used": "f9490f7de11b4f387f72ef800e73ccbb754711de",
+  "remote_head_at_build": "f9490f7de11b4f387f72ef800e73ccbb754711de"
+ },
+ "NickWright/OmniCloudMask-Combined-Training-Dataset": {
+  "revision_used": "cf7f958be9954301848d6d08fdb420292134b0a9",
+  "remote_head_at_build": "cf7f958be9954301848d6d08fdb420292134b0a9"
+ },
+ "NickWright/OmniCloudMask": {
+  "revision_used": "not pinned by revision; weights verified by sha256 below",
+  "remote_head_at_build": "c9a4fb88188709127aa25cfe51ae7fd41b0132f8"
+ },
+ "ocm_weights_sha256": {
+  "PM_model_OCM_7.97_R_G_NIR_3_smp_edgenext_small.usi_in1k_PT_state.safetensors": "d5fe67ad00f6fdb73eb8382ad925849e97fb82cedb46225344afff1a734a9c1d",
+  "PM_model_OCM_7.97_R_G_NIR_3_smp_regnety_004.pycls_in1k_PT_state.safetensors": "7f6e4202e17ee73efa4aba7abb5c34f4f90a9f7eb42480820714994dff2db660"
+ },
+ "ocm_model_version": 4.0,
+ "cloudsen12_dataset_version": "1.1.2 (per dataset card)"
+}
+uv run python scripts/build_docs.py
+wrote README.md, site/cloudmask-audit.md, report/cloudmask-acceptance-audit.pdf
+exit=0 finished 2026-10-27T01:15:46-05:00

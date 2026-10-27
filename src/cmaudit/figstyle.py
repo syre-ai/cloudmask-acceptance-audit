@@ -7,10 +7,12 @@ series is also direct-labeled). Thin marks, hairline grid, text in ink colors on
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-SURFACE = "#fcfcfb"
+SURFACE = "#ffffff"  # white so figures sit cleanly on print pages and light site cards
 INK = "#0b0b0b"
 INK_2 = "#52514e"
 MUTED = "#898781"
@@ -20,12 +22,19 @@ SERIES = ["#2a78d6", "#eb6834", "#1baf7a"]  # blue, orange, aqua
 STATUS = {"good": "#0ca30c", "warning": "#fab219", "serious": "#ec835a", "critical": "#d03b3b"}
 
 
+FONT_DIR = Path(__file__).resolve().parents[2] / "assets" / "fonts"
+
+
 def apply() -> None:
+    from matplotlib import font_manager
+
+    for f in sorted(FONT_DIR.glob("Inter-*.ttf")):
+        font_manager.fontManager.addfont(str(f))
     mpl.rcParams.update({
         "figure.facecolor": SURFACE, "axes.facecolor": SURFACE, "savefig.facecolor": SURFACE,
         "font.family": "sans-serif",
-        "font.sans-serif": ["Inter", "Segoe UI", "DejaVu Sans", "Arial"],
-        "font.size": 10, "axes.titlesize": 11, "axes.titleweight": "bold",
+        "font.sans-serif": ["Inter", "DejaVu Sans"],
+        "font.size": 10, "axes.titlesize": 11, "axes.titleweight": "semibold",
         "axes.titlelocation": "left", "axes.labelcolor": INK_2, "axes.edgecolor": AXIS,
         "axes.linewidth": 0.8, "axes.grid": True, "grid.color": GRID, "grid.linewidth": 0.8,
         "axes.axisbelow": True, "axes.spines.top": False, "axes.spines.right": False,
@@ -37,8 +46,6 @@ def apply() -> None:
 
 
 def save(fig, stem: str, out_dir: str = "results/figures") -> None:
-    from pathlib import Path
-
     Path(out_dir).mkdir(parents=True, exist_ok=True)
     fig.savefig(f"{out_dir}/{stem}.png")
     fig.savefig(f"{out_dir}/{stem}.svg")

@@ -18,7 +18,7 @@ from tqdm import tqdm
 
 from cmaudit.baselines import BASELINES
 from cmaudit.evaluate import ocm_pred, stack_cms
-from cmaudit.metrics import confusion, summarize
+from cmaudit.metrics import confusion, pixel_summary, summarize
 from cmaudit.samples import load, manifest, valid_mask
 
 WORLDCOVER = {10: "Tree cover", 20: "Shrubland", 30: "Grassland", 40: "Cropland",
@@ -95,6 +95,22 @@ def main() -> None:
         out.append(t)
     lc_tab = pd.concat(out)
     lc_tab.to_csv("results/subgroups_landcover.csv", index=False, float_format="%.4f")
+
+    # How concentrated are OCM's leaks per land cover? (share of leaked pixels from the two
+    # worst sites, and the leak composition by true class)
+    conc = []
+    d = lc[lc["method"] == "OmniCloudMask v4"]
+    for cover_name, g in d.groupby("landcover"):
+        cms = stack_cms(g)
+        leaked = cms[:, 1:, 0].sum(1)
+        by_site = pd.Series(leaked).groupby(g["roi_id"].to_numpy()).sum().sort_values(ascending=False)
+        s = pixel_summary(cms.sum(0))
+        conc.append({"landcover": cover_name, "sites": len(by_site),
+                     "top2_site_share_of_leaked_px": by_site.head(2).sum() / max(by_site.sum(), 1),
+                     "leak_thick": s["leak_thick"], "leak_thin": s["leak_thin"],
+                     "leak_shadow": s["leak_shadow"]})
+    pd.DataFrame(conc).to_csv("results/subgroups_landcover_concentration.csv", index=False,
+                              float_format="%.4f")
 
     g = scene_groups(man)
     per = pd.read_parquet("data/results/per_image_test.parquet")

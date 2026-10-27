@@ -19,6 +19,8 @@ dependencies = [
     "aiohttp>=3.14.5",
     "scipy>=1.17.1",
     "pillow>=13.0.0",
+    "weasyprint>=70.0",
+    "markdown>=3.11.2",
 ]
 
 [dependency-groups]

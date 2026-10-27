@@ -89,6 +89,26 @@ def jpeg(img: np.ndarray, quality: int, max_reflectance: float = 0.6) -> np.ndar
     return _finish(y / 255.0 * max_reflectance * SCALE, _nodata(img))
 
 
+def quantize8(img: np.ndarray, max_reflectance: float) -> np.ndarray:
+    """Lossless 8-bit delivery: linear scale 0..max_reflectance -> 0..255 (everything brighter
+    clips), no compression. Separates quantization/clipping from JPEG artifacts. Sentinel-2's
+    own true-colour product (TCI) clips near 0.25 reflectance."""
+    x = np.clip(np.rint(img.astype(np.float32) / (max_reflectance * SCALE) * 255.0), 0, 255)
+    return _finish(x / 255.0 * max_reflectance * SCALE, _nodata(img))
+
+
+def resampled_to_fine(img: np.ndarray, factor: int) -> np.ndarray:
+    """Coarse data delivered on the fine grid: block-average by ``factor`` (as ``coarsen``),
+    then bilinear upsampling back to 10 m, as harmonized data cubes do when they put 20-30 m
+    data on a 10 m grid. Contrast with ``coarsen``, where OCM runs on the native coarse grid."""
+    small = coarsen(img, factor).astype(np.float32)
+    zoom = [ndimage.zoom(b, factor, order=1, grid_mode=True, mode="nearest") for b in small]
+    up = np.stack(zoom)[:, :REAL, :REAL]
+    out = img.astype(np.float32).copy()
+    out[:, :REAL, :REAL] = up
+    return _finish(out, _nodata(img))
+
+
 def gain_offset(img: np.ndarray, gains=(1.0, 1.0, 1.1), offsets=(0.0, 0.0, 0.01)) -> np.ndarray:
     """Per-band linear calibration drift (gain, offset in reflectance). OCM z-scores each band
     per image, so this is expected to be invariant up to clipping; used as a check."""
@@ -104,4 +124,7 @@ SUITE = {
     "Coarser resolution": (coarsen, "factor", [2, 3, 5], "× 10 m"),
     "NIR misregistration": (misregister, "shift_px", [1, 2, 4], "px (10 m)"),
     "8-bit JPEG delivery": (jpeg, "quality", [95, 75, 50], "JPEG quality"),
+    "8-bit lossless (clip level)": (quantize8, "max_reflectance", [1.0, 0.6, 0.3],
+                                    "reflectance mapped to 255"),
+    "Coarse data on a 10 m grid": (resampled_to_fine, "factor", [2, 3, 5], "× 10 m, bilinear"),
 }

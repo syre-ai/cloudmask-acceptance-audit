@@ -1,0 +1,11 @@
+landcover,sites,top2_site_share_of_leaked_px,leak_thick,leak_thin,leak_shadow
+Bare / sparse,171,0.2411,0.0103,0.0213,0.0155
+Built-up,90,0.4567,0.0084,0.0166,0.0117
+Cropland,97,0.2009,0.0094,0.0291,0.0179
+Grassland,172,0.1628,0.0086,0.0282,0.0168
+Herbaceous wetland,69,0.3110,0.0133,0.0099,0.0263
+Moss and lichen,42,0.5101,0.0171,0.0297,0.0344
+Shrubland,115,0.2042,0.0087,0.0179,0.0176
+Snow and ice,14,0.6652,0.0299,0.0771,0.0231
+Tree cover,152,0.1195,0.0085,0.0280,0.0197
+Water,99,0.3315,0.0397,0.0450,0.0195

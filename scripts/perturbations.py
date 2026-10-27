@@ -52,10 +52,13 @@ def label_majority(label: np.ndarray, factor: int) -> np.ndarray:
     return counts.argmax(-1).astype(np.uint8)
 
 
-def run(models, ids: list[str]) -> pd.DataFrame:
+def run(models, ids: list[str], done: set) -> pd.DataFrame:
+    """Run every (perturbation, severity) not already in ``done``."""
     rows = []
-    jobs = [(name, s) for name, (_, _, sevs, _) in SUITE.items() for s in sevs]
-    jobs.append(("Oracle floor (label at coarse grid)", None))
+    jobs = [(name, s) for name, (_, _, sevs, _) in SUITE.items() for s in sevs
+            if (name, float(s)) not in done]
+    if not any(n.startswith("Oracle") for n, _ in done):
+        jobs.append(("Oracle floor (label at coarse grid)", None))
     for name, sev in tqdm(jobs, desc="perturbations"):
         if name.startswith("Oracle"):
             for f in SUITE["Coarser resolution"][2]:
@@ -100,10 +103,11 @@ def main() -> None:
     ids = man["tortilla:id"].tolist()
     roi_of = dict(zip(man["tortilla:id"], man["roi_id"]))
     models = load_models(dtype=torch.float32)
-    if OUT.exists():
-        df = pd.read_parquet(OUT)
-    else:
-        df = run(models, ids)
+    df = pd.read_parquet(OUT) if OUT.exists() else pd.DataFrame(columns=["perturbation", "severity"])
+    done = {(p, float(s)) for p, s in df[["perturbation", "severity"]].drop_duplicates().itertuples(index=False)}
+    new = run(models, ids, done)
+    if len(new):
+        df = pd.concat([df, new], ignore_index=True) if len(df) else new
         df.to_parquet(OUT)
 
     clean = pd.read_parquet("data/results/per_image_test.parquet")

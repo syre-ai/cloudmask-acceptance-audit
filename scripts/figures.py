@@ -21,6 +21,11 @@ POINTS = {
 }
 
 
+def n_scenes() -> int:
+    ov = pd.read_csv("results/overall_test.csv").set_index("group")
+    return int(ov.loc["OmniCloudMask v4 | l1c", "images"])
+
+
 def tradeoff() -> None:
     curves = pd.read_csv("results/curves_test.csv")
     overall = pd.read_csv("results/overall_test.csv").set_index("group")
@@ -30,6 +35,8 @@ def tradeoff() -> None:
         c = curves[curves["method"] == key].dropna()
         c = c[(c["discard_rate"] <= 0.6) & (c["leak_rate"] <= 0.35)]
         ax.plot(c["discard_rate"], c["leak_rate"], color=color, label=name)
+        if key.startswith("OmniCloudMask"):
+            continue  # its annotated operating points sit where an end label would collide
         end = c.iloc[(c["discard_rate"] - 0.6).abs().argmin()]
         ax.annotate(name, (end["discard_rate"], end["leak_rate"]), xytext=(4, 0),
                     textcoords="offset points", va="center", fontsize=9, color=fs.INK_2)
@@ -42,7 +49,7 @@ def tradeoff() -> None:
     o = ops[(ops["method"] == "OmniCloudMask v4 | l1c") & ops["rule"].str.startswith("leak <= 2%")].iloc[0]
     fs.dot(ax, o["test_discard"], o["test_leak"], fs.SERIES[0])
     ax.annotate(f"OCM tuned for 2% leak: discard {o['test_discard']:.1%}",
-                (o["test_discard"], o["test_leak"]), xytext=(10, -16), textcoords="offset points",
+                (o["test_discard"], o["test_leak"]), xytext=(14, 9), textcoords="offset points",
                 fontsize=9, color=fs.INK)
     for key, name in POINTS.items():
         r = overall.loc[key]
@@ -55,7 +62,7 @@ def tradeoff() -> None:
     ax.yaxis.set_major_formatter(PercentFormatter(1, decimals=0))
     ax.set_xlabel("Clear pixels thrown away (discard rate)")
     ax.set_ylabel("Accepted pixels that are cloud or shadow (leak rate)")
-    ax.set_title("Cost of a cleaner mask: leak vs discard on 970 test scenes")
+    ax.set_title(f"Cost of a cleaner mask: leak vs discard on {n_scenes()} test scenes")
     ax.legend(loc="upper right", fontsize=9)
     ax.text(0, -0.17, "Curves sweep each product's own score threshold; grey dots are "
             "class-only products at their fixed rules. CloudSEN12+ test split, overlap-screened.",
@@ -85,7 +92,7 @@ def landcover() -> None:
     ax.set_xlabel("Leak rate: accepted pixels that are cloud or shadow (95% CI)")
     ax.set_title("OmniCloudMask leaks most over snow, ice and water")
     ax.text(0, -0.2, "Land cover from ESA WorldCover under each pixel. CI: bootstrap over sites "
-            "(5 dates per site). CloudSEN12+ test, 965 scenes.", transform=ax.transAxes,
+            f"(5 dates per site). CloudSEN12+ test, {n_scenes()} scenes.", transform=ax.transAxes,
             fontsize=8, color=fs.MUTED)
     fs.save(fig, "landcover_leak")
 
@@ -123,11 +130,58 @@ def regimes() -> None:
     fs.save(fig, "regimes")
 
 
+SEV_LABEL = {
+    "Sensor noise": lambda v: f"σ {v:g}",
+    "Optical blur": lambda v: f"{v:g} px",
+    "Coarser resolution": lambda v: f"{int(v) * 10} m",
+    "Coarse data on a 10 m grid": lambda v: f"{int(v) * 10} m",
+    "NIR misregistration": lambda v: f"{int(v)} px",
+    "8-bit JPEG delivery": lambda v: f"q{int(v)}",
+    "8-bit lossless (clip level)": lambda v: f"clip {v:g}",
+}
+
+
+def stress() -> None:
+    t = pd.read_csv("results/perturbations_test.csv")
+    t = t[~t["perturbation"].str.startswith("Oracle")]
+    names = list(dict.fromkeys(t["perturbation"]))
+    cols = 4
+    rows = -(-len(names) // cols)
+    fig, axes = plt.subplots(rows, cols, figsize=(9.6, 2.5 * rows), sharey=True)
+    axes = axes.ravel()
+    lo = min(t["d_leak_rate_lo"].min(), t["d_discard_rate_lo"].min())
+    hi = max(t["d_leak_rate_hi"].max(), t["d_discard_rate_hi"].max())
+    for ax, name in zip(axes, names):
+        g = t[t["perturbation"] == name].reset_index(drop=True)
+        x = range(len(g))
+        ax.axhline(0, color=fs.AXIS, lw=1)
+        for stat, color, off, lab in (("leak_rate", fs.SERIES[1], -0.08, "leak"),
+                                       ("discard_rate", fs.SERIES[0], 0.08, "discard")):
+            xs = [i + off for i in x]
+            ax.vlines(xs, g[f"d_{stat}_lo"], g[f"d_{stat}_hi"], color=color, lw=2)
+            ax.plot(xs, g[f"d_{stat}"], "o", ms=6, mfc=color, mec=fs.SURFACE, mew=1.5, label=lab)
+        ax.set_xticks(list(x), [SEV_LABEL[name](v) for v in g["severity"]], fontsize=8)
+        ax.set_title(name, fontsize=9)
+        ax.set_ylim(lo - 0.02, hi + 0.02)
+        ax.yaxis.set_major_formatter(PercentFormatter(1, decimals=0))
+        ax.grid(axis="x", visible=False)
+    for ax in axes[len(names):]:
+        ax.set_visible(False)
+    axes[0].legend(loc="upper left", fontsize=8)
+    fig.suptitle("Stress test (simulated): change in leak and discard vs the clean run",
+                 x=0.01, ha="left", fontweight="semibold", fontsize=11)
+    fig.text(0.01, -0.02, f"Paired over the same {n_scenes()} test scenes; bars are 95% site-bootstrap CIs. "
+             "Points above zero are worse.", fontsize=8, color=fs.MUTED)
+    fig.tight_layout()
+    fs.save(fig, "stress")
+
+
 def main() -> None:
     fs.apply()
     tradeoff()
     landcover()
     regimes()
+    stress()
 
 
 if __name__ == "__main__":

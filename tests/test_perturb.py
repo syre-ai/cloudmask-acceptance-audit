@@ -11,7 +11,8 @@ def _img(seed=0):
     return img
 
 
-@pytest.mark.parametrize("name", [n for n in SUITE if n != "Coarser resolution"])
+@pytest.mark.parametrize("name", [n for n in SUITE if n not in ("Coarser resolution",
+                                                                 "Coarse data on a 10 m grid")])
 def test_suite_preserves_shape_dtype_and_nodata(name):
     fn, kw, sevs, _ = SUITE[name]
     img = _img()
@@ -70,3 +71,24 @@ def test_buffer_grows_cloud_not_abstention():
     assert out[4, 4] == 2 and out[3, 4] == 1 and out[4, 5] == 1 and out[3, 3] == 0
     assert out[0, 1] == 0 and out[0, 0] == 255
     assert np.array_equal(buffered(pred, 0), pred)
+
+
+def test_resampled_to_fine_shape_and_smoothness():
+    from cmaudit.perturb import resampled_to_fine
+
+    rng = np.random.default_rng(0)
+    img = rng.integers(100, 4000, (3, 512, 512)).astype(np.uint16)
+    out = resampled_to_fine(img, 3)
+    assert out.shape == img.shape and out.dtype == np.uint16
+    assert (out[:, 509:, :] == img[:, 509:, :]).all()  # padding untouched
+    # bilinear upsampling of block means is much smoother than the input
+    assert np.abs(np.diff(out[0, :509, :509].astype(float), axis=1)).mean() < \
+        0.5 * np.abs(np.diff(img[0, :509, :509].astype(float), axis=1)).mean()
+
+
+def test_quantize8_clips_bright_values():
+    from cmaudit.perturb import quantize8
+
+    img = np.array([[[1000, 3000, 9000]]], np.uint16).repeat(3, 0)
+    out = quantize8(img, 0.3)
+    assert out[0, 0, 2] == 3000 and abs(int(out[0, 0, 0]) - 1000) <= 6

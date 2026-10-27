@@ -50,7 +50,8 @@ def native_rule(method: str, t: int) -> tuple[float, str]:
         return (100 - t) / 100, (f"accept if the stored raw cloud probability is <= {100 - t}% "
                                  f"(no averaging/dilation)")
     # Cloud Score+ stored as integer v = score x 10000; bin = v // 10; scored: bin >= t
-    return t / 1000, f"accept if score >= {t / 1000:.3f} (stored value >= {10 * t})"
+    return t / 1000, (f"accept if {t / 1000:.3f} <= score <= 1 ({10 * t} <= stored value <= 10000; "
+                      f"stored values above 10000 are invalid and rejected)")
 OPERATING_POINTS = [("leak", 0.02), ("leak", 0.05), ("discard", 0.02), ("discard", 0.05)]
 N_BOOT = 1000
 

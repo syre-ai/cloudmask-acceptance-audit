@@ -58,7 +58,7 @@ def test_executable_rules_match_scored_predicate():
         assert (np.rint(np.float32(p) * 255) >= 218) == (p >= 217.5 / 255)
     # Cloud Score+: bin = v // 10, scored bin >= t  <=>  v >= 10 t  <=>  score >= t / 1000
     thr, rule = native_rule("Cloud Score+ cs | product", 805)
-    assert thr == 0.805 and "stored value >= 8050" in rule
+    assert thr == 0.805 and "8050 <= stored value <= 10000" in rule
     for v in (8049, 8050, 8059):
         assert (v // 10 >= 805) == (v >= 8050)
     # s2cloudless: clear score 100 - v >= t  <=>  v <= 100 - t

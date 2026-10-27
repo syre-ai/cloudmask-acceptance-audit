@@ -65,7 +65,7 @@ def fetch(mode: str, ids: list[str], out_dir: Path, workers: int = 8) -> list[st
             np.savez_compressed(tmp, **arrays)
             tmp.rename(out_dir / f"{tid}.npz")
             return None
-        except Exception as exc:  # network hiccups: report and let the caller retry
+        except Exception as exc:  # noqa: BLE001 - network hiccups: report, caller retries
             print(f"[{mode}] {tid}: {exc}")
             return tid
 

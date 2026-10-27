@@ -78,7 +78,7 @@ def scene_policy(true_cover: np.ndarray, pred_cover: np.ndarray, threshold: floa
     pred_cover = np.asarray(pred_cover)
     accept = pred_cover <= threshold
     truly_ok = true_cover <= threshold
-    n_acc, n_rej = accept.sum(), (~accept).sum()
+    n_acc = accept.sum()
     return {
         "threshold": threshold,
         "accepted": int(n_acc),

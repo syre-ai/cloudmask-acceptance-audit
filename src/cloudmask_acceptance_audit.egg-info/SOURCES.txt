@@ -1,7 +1,0 @@
-pyproject.toml
-src/cloudmask_acceptance_audit.egg-info/PKG-INFO
-src/cloudmask_acceptance_audit.egg-info/SOURCES.txt
-src/cloudmask_acceptance_audit.egg-info/dependency_links.txt
-src/cloudmask_acceptance_audit.egg-info/requires.txt
-src/cloudmask_acceptance_audit.egg-info/top_level.txt
-src/cmaudit/__init__.py

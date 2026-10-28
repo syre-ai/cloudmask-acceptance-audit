@@ -177,7 +177,7 @@ def readme(N: dict) -> str:
         f"{v['nearest']['leak']} / {v['nearest']['discard']} | "
         f"{v['ref']['leak']} / {v['ref']['discard']} |" for f, v in coarse_rows(N).items())
     find_md = "\n".join(f"| {f['sev']} | {f['title']} | {f['rec']} |" for f in findings(N))
-    return f"""# Cloud-mask acceptance audit: OmniCloudMask v4
+    return f"""<img src="assets/banner.png" alt="Cloud-mask acceptance audit: OmniCloudMask v4" width="100%">
 
 An independent assurance audit of [OmniCloudMask](https://github.com/DPIRD-DMA/OmniCloudMask)
 (v4 weights, MIT), an open cloud and cloud-shadow segmentation model for Sentinel-2 and
@@ -186,7 +186,8 @@ mask, how much cloud leaks into the pixels you accept, how much usable ground do
 away, and where does it fail?**
 
 Every number below is computed by this repository from public data; nothing is typed in by
-hand. The client-style report is in [`report/`](report/).
+hand. The client-style report is in [`report/`](report/), and the
+[threshold explorer](https://syre-ai.github.io/cloudmask-acceptance-audit/site/explorer/) lets you drag the operating point.
 
 ## Why this matters
 
